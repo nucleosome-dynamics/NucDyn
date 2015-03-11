@@ -125,6 +125,7 @@
             Number of reads involved in the hotspot.
         }
     }
+}
 \author{
     Oscar Flores \email{oflores@mmb.pcb.ub.es}
     Ricard Illa \email{ricard.illa@irbbarcelona.org}
