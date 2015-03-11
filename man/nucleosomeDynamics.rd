@@ -11,9 +11,9 @@
     reads of two NGS experiments of nucleosome coverage.
 }
 \usage{
-    \S4Method{nucleosomeDynamics}{IRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, maxDiff=74)
-    \S4Method{nucleosomeDynamics}{GRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, maxDiff=74, mc.cores=1)
-    \S4Method{nucleosomeDynamics}{RangedData}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, maxDiff=74, mc.cores=1)
+    \S4method{nucleosomeDynamics}{IRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74)
+    \S4method{nucleosomeDynamics}{GRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
+    \S4method{nucleosomeDynamics}{RangedData}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
 }
 \arguments{
     \item{setA}{
@@ -39,7 +39,9 @@
         Set it to 0 if you don't want this granularization.
     }
     \item{readSize}{
-        Length to which all reads will be set in case equalSize is \code{TRUE}.
+        Length to which all reads will be set in case \code{equalSize} is
+        \code{TRUE}.  It is ignored when \code{equalSize} is set to
+        \code{FALSE}.
     }
     \item{maxDiff}{
         Maximum distance between the dyads of two reads that allows them to
