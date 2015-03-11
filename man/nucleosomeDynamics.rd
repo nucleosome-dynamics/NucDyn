@@ -18,7 +18,7 @@
 \arguments{
     \item{setA}{
         Reads of the first experiment in \code{IRanges}, \code{RangedData},
-        or \code{GRanges}. The format should the the same of the one in setB.
+        or \code{GRanges}. The format should the same of the one in setB.
     }
     \item{setB}{
         Reads of the second experiment in \code{IRanges}, \code{RangedData},
@@ -30,7 +30,7 @@
     \item{equalSize}{
         If set to \code{TRUE}, all sets will be set to the same length,
         conserving their original dyad position. Use it if the reads in your
-        sets have differences in length (i.e. due to differences in the
+        sets have differences in length (ie, due to differences in the
         digestion) that you are not interested in.
     }
     \item{roundPow}{
