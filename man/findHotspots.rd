@@ -1,6 +1,6 @@
 \name{findHotspots}
 \alias{findHotspots}
-\alias{findHotspots,NucDy-method}
+\alias{findHotspots,NucDyn-method}
 \title{
     Find hotspots in a NucDyn object.
 }
@@ -8,7 +8,7 @@
     Find hotspots from a given nucleosome dynamics.
 }
 \usage{
-    \S4method{nucleosomeDynamics}{NucDyn}(dyn, range=c(), chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold="60%", useOptim=FALSE, mc.cores=1)
+    \S4method{findHotspots}{NucDyn}(dyn, range=c(), chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold="60%", useOptim=FALSE, mc.cores=1)
 }
 \arguments{
     \item{dyn}{

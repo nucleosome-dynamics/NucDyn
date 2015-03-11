@@ -363,31 +363,32 @@
     return(all)
 }
 
-findHotspots <- function (dyn, range=c(), chr=NULL, nuc.width=120, combined=TRUE,
-                          same.magnitude=2, threshold="60%", mc.cores=1, useOptim=FALSE)
-{
-    setA <- set.a(dyn)
-    setB <- set.b(dyn)
+setMethod("findHotspots", signature(dyn="NucDyn"),
+    function (dyn, range=c(), chr=NULL, nuc.width=120, combined=TRUE,
+              same.magnitude=2, threshold="60%", mc.cores=1, useOptim=FALSE) {
+        setA <- set.a(dyn)
+        setB <- set.b(dyn)
 
-    chrs <- IRanges::levels(seqnames(setA)$originals)
+        chrs <- IRanges::levels(seqnames(setA)$originals)
 
-    chrIter <- function(chr) {
-        message(paste("Starting", chr))
+        chrIter <- function(chr) {
+            message(paste("Starting", chr))
 
-        f <- function(x) ranges(x[seqnames(x) == chr])
-        chrDyn <- IRanges::mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
+            f <- function(x) ranges(x[seqnames(x) == chr])
+            chrDyn <- IRanges::mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
 
-        hs <- .findInRange(chrDyn, range=c(), nuc.width=nuc.width,
-                           combined=combined, same.magnitude=same.magnitude,
-                           threshold=threshold, useOptim=useOptim)
-        if (nrow(hs)) {
-            hs$chr <- chr
+            hs <- .findInRange(chrDyn, range=c(), nuc.width=nuc.width,
+                               combined=combined, same.magnitude=same.magnitude,
+                               threshold=threshold, useOptim=useOptim)
+            if (nrow(hs)) {
+                hs$chr <- chr
+            }
+            message(paste(chr, "done"))
+            hs
         }
-        message(paste(chr, "done"))
-        hs
+
+        hsLs <- .xlapply(chrs, chrIter, mc.cores=mc.cores)
+
+        return(do.call("rbind", hsLs))
     }
-
-    hsLs <- .xlapply(chrs, chrIter, mc.cores=mc.cores)
-
-    return(do.call("rbind", hsLs))
-}
+)
