@@ -1,0 +1,13 @@
+Package: NucDyn
+Type: Package
+Title: Nuc Dyn
+Version: 0.1
+Date: 2014-08-19
+Author: Ricard Illa
+Maintainer: Ricard Illa <ricard.illa@irbbarcelona.org>
+Description: Single nucleosome molecule dynamics bewteen two reference states
+License: FreeBSD
+Depends: methods, BiocGenerics, IRanges, GenomicRanges, nucleR, Biobase, parallel
+Imports: methods, BiocGenerics, IRanges, GenomicRanges, nucleR, Biobase, parallel
+LazyLoad: yes
+Packaged: 2014-08-21 15:12:54 UTC; rilla

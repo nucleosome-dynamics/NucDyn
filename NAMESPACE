@@ -1,0 +1,2 @@
+useDynLib(NucDyn)
+export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b)
