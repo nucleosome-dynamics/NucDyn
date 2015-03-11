@@ -1,8 +1,8 @@
 \name{nucleosomeDynamics}
 \alias{nucleosomeDynamics}
-\alias{nucleosomeDynamics,IRanges-method}
-\alias{nucleosomeDynamics,GRanges-method}
-\alias{nucleosomeDynamics,RangedData-method}
+\alias{nucleosomeDynamics,IRanges,IRanges-method}
+\alias{nucleosomeDynamics,GRanges,GRanges-method}
+\alias{nucleosomeDynamics,RangedData,RangedData-method}
 \title{
     Run nucleosomeDynamics to compare two sets.
 }
@@ -11,9 +11,9 @@
     reads of two NGS experiments of nucleosome coverage.
 }
 \usage{
-    \S4method{nucleosomeDynamics}{IRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74)
-    \S4method{nucleosomeDynamics}{GRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
-    \S4method{nucleosomeDynamics}{RangedData}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
+    \S4method{nucleosomeDynamics}{IRanges,IRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74)
+    \S4method{nucleosomeDynamics}{GRanges,GRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
+    \S4method{nucleosomeDynamics}{RangedData,RangedData}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
 }
 \arguments{
     \item{setA}{

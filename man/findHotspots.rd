@@ -8,7 +8,7 @@
     Find hotspots from a given nucleosome dynamics.
 }
 \usage{
-    \S4method{findHotspots}{NucDyn}(dyn, range=c(), chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold="60%", useOptim=FALSE, mc.cores=1)
+    \S4method{findHotspots}{NucDyn}(dyn, range=c(), chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold="60\%", useOptim=FALSE, mc.cores=1)
 }
 \arguments{
     \item{dyn}{
@@ -85,11 +85,11 @@
     As Translational and coverage changes can happen anywhere, only those
     involving a certain number of reads are reported. This number can by
     adjusted by the \code{threshold} parameter. If \code{threshold} is a
-    \code{character} vector representing a percentage value (ie, \code{"60%"}),
-    this will be automatically converted to the absolute value given by the
-    corresponding percentile of the coverage in the window. IF, instead,
-    \code{threshold} is a \code{numeric} value, this value will be used as
-    absolute threhold.
+    \code{character} vector representing a percentage value (ie,
+    \code{"60\%"}), this will be automatically converted to the absolute value
+    given by the corresponding percentile of the coverage in the window. If,
+    instead, \code{threshold} is a \code{numeric} value, this value will be
+    used as absolute threhold.
 
     It two adjacent hotspots with shifts in opposite directions are detected
     but one of them is relatively small in comparison with the other, but will
