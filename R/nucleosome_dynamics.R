@@ -53,7 +53,7 @@ setMethod("nucleosomeDynamics", signature(setA="GRanges", setB="GRanges"),
             function(chr) {
                 message(paste("Starting", chr))
 
-                dyn <- NucDyn:::.nucleosomeDynamics(
+                dyn <- .nucleosomeDynamics(
                     lapply(splitted,
                            function(x) ranges(x[[chr]])),
                     equalSize=equalSize,
