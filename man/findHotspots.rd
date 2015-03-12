@@ -111,23 +111,23 @@
     A \code{data.frame} with the following columns:
 
     \itemize{
-        \item{chrom}{
+        \item{chrom:}{
             Chromosome name.
         }
-        \item{coord}{
+        \item{coord:}{
             Genomic coordinates (average dyad position of affected
             nucleosomes).
         }
-        \item{type}{
+        \item{type:}{
             The type of the hotspot (as listed above).
         }
-        \item{nreads}{
+        \item{nreads:}{
             Number of reads involved in the hotspot.
         }
     }
 }
 \author{
-    Oscar Flores \email{oflores@mmb.pcb.ub.es}
+    Oscar Flores \email{oflores@mmb.pcb.ub.es}\cr
     Ricard Illa \email{ricard.illa@irbbarcelona.org}
 }
 \keyword{manip}

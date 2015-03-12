@@ -84,24 +84,24 @@
     implies that the previous definitions tried are do not hold.
     The different types of matches, in the order in which they are tried are:
     \itemize{
-        \item{Coinciding}{
+        \item{Coinciding:}{
             Reads that start and end in the exact same position in both sets.
         }
-        \item{Same start}{
+        \item{Same start:}{
             Reads that start in the same position in both sets but end at a
             different one.
         }
-        \item{Same end}{
+        \item{Same end:}{
             Reads that end in the same position in both sets but start at a
             different one.
         }
-        \item{Contained}{
+        \item{Contained:}{
             Reads from one set that are contained or contain reads from the
             other set. For a read to be contained by another, it has to start
             at a more upstream position but end in a more downstream position
             than the second read.
         }
-        \item{Shifts}{
+        \item{Shifts:}{
             Reads whose dyads are at a maximum distance of \code{maxDist}
             (default is 74 bp.).
         }
@@ -123,50 +123,50 @@
     The names of the \code{GRangesList} objects the following (with some
     exceptions*):
     \itemize{
-        \item{originals}{
+        \item{originals:}{
             All reads present for that set before the analysis.
         }
-        \item{coinciding}{
+        \item{coinciding:}{
             Reads that have an exact match in the other set and are considered
             to be the same read.
         }
-        \item{same.start}{
+        \item{same.start:}{
             Reads whose match in the other set starts at the same position but
             ends in a different one. The are considered to be a consequence of
             experimental differences.
         }
-        \item{same.end}{
+        \item{same.end:}{
             Reads whose match in the other set ends at the same position but
             starts in a different one. They are considered to be a consequence
             of experimental differences.
         }
-        \item{containedA}{
+        \item{containedA:}{
             Reads in the set B which are totally contained by the length of
             their match in the set A. Or reads in the set A that totally
             contain the length of their match in the set B. They are considered
             to be a consequence of experimental differences.
         }
-        \item{containedB}{
+        \item{containedB:}{
             Reads in the set A which are totally contained by the length of
             their match in the set B. Or reads in the set B that totally
             contain the length of their match in the set A. They are considered
             to be a consequence of experimental differences.
         }
-        \item{left.shifts}{
+        \item{left.shifts:}{
             Shifts that suffer an upstream shift when considering transition
             from the set A to the set B.
         }
-        \item{right.shifts}{
+        \item{right.shifts:}{
             Shifts that suffer a downstream shift when considering transition
             from the set A to the set B.
         }
-        \item{indels}{
+        \item{indels:}{
             Reads that are not present in the other set due to an insertion or
             deletion event. If they are in set A, they are considered a
             deletion and if they are in set B, they are considered an
             insertion.
         }
-        \item{unpaired}{
+        \item{unpaired:}{
             Reads that are uniformly and randomly removed from the set with
             more reads to account for differences in the number of reads
             between sets.
