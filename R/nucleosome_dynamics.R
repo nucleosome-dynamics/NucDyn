@@ -56,7 +56,7 @@ setMethod(
         splitted <- lapply(
             sets,
             function(x)
-                GenomicRanges::split(x, seqnames(x))
+                split(x, seqnames(x))
         )
         chrs <- unique(unlist(lapply(splitted, names)))
 
@@ -116,7 +116,7 @@ setMethod(
         ranges = do.call("c", unname(unlist(setLs))),
         type = Rle(sapply(setLs, names), unlist(lens))
     )
-    grLs <- GenomicRanges::split(gr, gr$type)  # split by type
+    grLs <- split(gr, gr$type)  # split by type
 
     for (type in readTypes) {  # add possibly missing types
         if (!type %in% names(grLs)) {
@@ -142,7 +142,7 @@ setMethod(
         #mySets <- lapply(mySets, function(x) .rmLongReads(x, maxLen=maxLen))
 
         mySets <- lapply(mySets, function(x) .setSizeTo(x, readSize=readSize))
-        mySets <- lapply(mySets, IRanges::sort)  # keep them sorted
+        mySets <- lapply(mySets, sort)  # keep them sorted
 
         # reads considered to be the same with a small variance distance allowed
         subsetList <- .equalsAtDist(mySets, maxDist=5)
@@ -153,7 +153,7 @@ setMethod(
     } else {
         # round the reads to powers of 5
         mySets <- lapply(mySets, function(x) .setRounder(x, pow=roundPow))
-        mySets <- lapply(mySets, IRanges::sort)  # keep them sorted
+        mySets <- lapply(mySets, sort)  # keep them sorted
 
         # pairs that start and end at the same position
         subsetList <- .equals(mySets)

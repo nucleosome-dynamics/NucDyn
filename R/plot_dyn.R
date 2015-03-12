@@ -36,8 +36,8 @@
     }
 
     # calculate coverages
-    covA <- IRanges::as.vector(coverage(subA))
-    covB <- IRanges::as.vector(coverage(subB)) * norm.factor
+    covA <- as.vector(coverage(subA))
+    covB <- as.vector(coverage(subB)) * norm.factor
 
     args1 <- args
     # remove composite pars
@@ -130,12 +130,12 @@
     insertions <- .subsetCov(dyn$indels[[2]], plot.range)
 
     if (length(deletions) > 0) {
-        covDel <- IRanges::as.vector(coverage(deletions))
+        covDel <- as.vector(coverage(deletions))
         lines(covDel, type="h", lwd=2, col=args[["col.indel"]][2])
     }
 
     if (length(insertions)) {
-        covIns <- IRanges::as.vector(coverage(insertions))
+        covIns <- as.vector(coverage(insertions))
         lines(covIns, type="h", lwd=2, col=args[["col.indel"]][1])
     }
 
@@ -206,7 +206,7 @@ setMethod(
             if (is.null(plot.range)) {
                 ran <- range(do.call(c,
                                      lapply(dynRanges,
-                                            GenomicRanges::unlist)))
+                                            unlist)))
                 plot.range <- c(start(ran), end(ran))
             }
 

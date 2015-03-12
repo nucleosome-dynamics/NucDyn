@@ -371,13 +371,13 @@ setMethod(
         setA <- set.a(dyn)
         setB <- set.b(dyn)
 
-        chrs <- IRanges::levels(seqnames(setA)$originals)
+        chrs <- levels(seqnames(setA)$originals)
 
         chrIter <- function(chr) {
             message(paste("Starting", chr))
 
             f <- function(x) ranges(x[seqnames(x) == chr])
-            chrDyn <- IRanges::mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
+            chrDyn <- mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
 
             hs <- .findInRange(chrDyn, range=c(), nuc.width=nuc.width,
                                combined=combined, same.magnitude=same.magnitude,

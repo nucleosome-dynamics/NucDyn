@@ -3,8 +3,6 @@
 {
     if (mc.cores > 1) {
         succ.mc <- "parallel" %in% loadedNamespaces()
-        if (!succ.mc)
-            succ.mc <- library("parallel", logical.return=TRUE)
         if (!succ.mc) {
             warning("'parallel' library not available, switching to mc.cores=1")
             return(lapply(X=X, FUN=FUN, ...))
