@@ -1,19 +1,20 @@
 import(methods)
+
 import(BiocGenerics)
+importMethodsFrom(BiocGenerics, mapply)
 
 importMethodsFrom(nucleR, filterFFT, peakDetection)
 
 importFrom(parallel, mclapply)
 
-importMethodsFrom(IRanges, as.vector, sort, mapply, levels, coverage,
-                  disjointBins)
+importMethodsFrom(IRanges, as.vector, sort, coverage, disjointBins, unlist)
 importFrom(IRanges, IRanges, reduce, findOverlaps)
 
 importClassesFrom(GenomicRanges, GRangesList)
-importMethodsFrom(GenomicRanges, unlist, split)
+importMethodsFrom(GenomicRanges, split)
 importFrom(GenomicRanges, GRanges)
 
-importFrom(S4Vectors, Rle, queryHits, subjectHits)
+importFrom(S4Vectors, Rle, levels, queryHits, subjectHits)
 
 useDynLib(NucDyn)
 export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b)
