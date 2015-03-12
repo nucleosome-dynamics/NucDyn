@@ -1,17 +1,25 @@
 #!/usr/bin/env Rscript
 
-setMethod("nucleosomeDynamics", signature(setA="IRanges", setB="IRanges"),
-    function(setA, setB, equalSize, ...) {
+setMethod(
+    "nucleosomeDynamics",
+    signature(setA="IRanges", setB="IRanges"),
+    function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
+             maxDiff=74) {
         sets <- list(setA, setB)
-        myDyn <- .nucleosomeDynamics(sets, equalSize=equalSize, ...)
+        myDyn <- .nucleosomeDynamics(mySets=sets, maxLen=maxLen,
+                                     roundPow=roundPow, equalSize=equalSize,
+                                     readSize=readSize, maxDiff=maxDiff)
         # we wrap it in a list so that buildNucDyn behaves as expected
         myDyn <- .buildNucDyn(list("*"=myDyn), equalSize)
         myDyn
     }
 )
 
-setMethod("nucleosomeDynamics", signature(setA="RangedData", setB="RangedData"),
-    function(setA, setB, equalSize, mc.cores=1, ...) {
+setMethod(
+    "nucleosomeDynamics",
+    signature(setA="RangedData", setB="RangedData"),
+    function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
+             maxDiff=74, mc.cores=1) {
         sets <- list(setA, setB)
 
         # do it for every chromosome separately
@@ -20,8 +28,10 @@ setMethod("nucleosomeDynamics", signature(setA="RangedData", setB="RangedData"),
             chrs,
             function(chr) {
                 message(paste("Starting", chr))
-                dyn <- .nucleosomeDynamics(lapply(sets, function(x) x[chr]),
-                                           equalSize=equalSize, ...)
+                dyn <- .nucleosomeDynamics(mySets=lapply(sets, "[", chr),
+                                           maxLen=maxLen, roundPow=roundPow,
+                                           equalSize=equalSize,
+                                           readSize=readSize, maxDiff=maxDiff)
                 message(paste(chr, "done"))
                 dyn
             },
@@ -36,8 +46,11 @@ setMethod("nucleosomeDynamics", signature(setA="RangedData", setB="RangedData"),
     }
 )
 
-setMethod("nucleosomeDynamics", signature(setA="GRanges", setB="GRanges"),
-    function(setA, setB, equalSize, mc.cores=1, ...) {
+setMethod(
+    "nucleosomeDynamics",
+    signature(setA="GRanges", setB="GRanges"),
+    function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
+             maxDiff=74, mc.cores=1) {
         sets <- list(setA, setB)
 
         splitted <- lapply(
@@ -54,10 +67,10 @@ setMethod("nucleosomeDynamics", signature(setA="GRanges", setB="GRanges"),
                 message(paste("Starting", chr))
 
                 dyn <- .nucleosomeDynamics(
-                    lapply(splitted,
-                           function(x) ranges(x[[chr]])),
-                    equalSize=equalSize,
-                    ...
+                    mySets=lapply(splitted,
+                                  function(x) ranges(x[[chr]])),
+                    maxLen=maxLen, roundPow=roundPow, equalSize=equalSize,
+                    readSize=readSize, maxDiff=maxDiff
                 )
 
                 message(paste(chr, "done"))
