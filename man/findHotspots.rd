@@ -57,7 +57,7 @@
     by pointing out these regions with relevant changes in the individual
     position of the nucleosomes.
 
-    There are 4 types fo basic hotspots, plus their combinations. Basic ones
+    There are 4 types of basic hotspots, plus their combinations. Basic ones
     are:
 
     \itemize{
