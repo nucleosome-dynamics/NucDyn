@@ -29,4 +29,3 @@ setGeneric("set.a", function(object, ...) standardGeneric("set.a"))
 setMethod("set.a", "NucDyn", function(object) object@set.a)
 setGeneric("set.b", function(object, ...) standardGeneric("set.b"))
 setMethod("set.b", "NucDyn", function(object) object@set.b)
-

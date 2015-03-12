@@ -5,6 +5,8 @@
 \alias{NucDyn-class}
 
 % accessors
+\alias{set.a}
+\alias{set.b}
 \alias{set.a,NucDyn-method}
 \alias{set.b,NucDyn-method}
 
