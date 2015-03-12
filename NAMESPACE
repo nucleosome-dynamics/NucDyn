@@ -12,7 +12,7 @@ importMethodsFrom(IRanges, as.vector, sort, coverage, disjointBins, unlist,
 importFrom(IRanges, IRanges, reduce, findOverlaps)
 
 importClassesFrom(GenomicRanges, GRangesList)
-importMethodsFrom(GenomicRanges, split)
+importMethodsFrom(GenomicRanges, split, seqnames)
 importFrom(GenomicRanges, GRanges)
 
 importFrom(S4Vectors, Rle, levels, queryHits, subjectHits)
