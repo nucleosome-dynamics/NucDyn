@@ -7,7 +7,8 @@ importMethodsFrom(nucleR, filterFFT, peakDetection)
 
 importFrom(parallel, mclapply)
 
-importMethodsFrom(IRanges, as.vector, sort, coverage, disjointBins, unlist)
+importMethodsFrom(IRanges, as.vector, sort, coverage, disjointBins, unlist,
+                  space)
 importFrom(IRanges, IRanges, reduce, findOverlaps)
 
 importClassesFrom(GenomicRanges, GRangesList)
