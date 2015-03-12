@@ -175,36 +175,46 @@
 }
 
 
-plotDynamics <- function(dyn, plot.range=NULL, chr=NULL,
-                         dyn.name="Dyn", expA.name="Ref 1", expB.name="Ref 2",
-                         norm.factor=1, ...)
-invisible({
-    if (is.null(chr)) {
-        warning("No chromosome specified. If the input contained more than one chromosome, they will apprear concatenated in the plot.")
-        dynRanges <- lapply(list(set.a(dyn), set.b(dyn)), ranges)
-    } else {
-        dynRanges <- lapply(
-            list(set.a(dyn), set.b(dyn)),
-            function (x) ranges(x[seqnames(x) == chr])
-        )
+setMethod(
+    "plotDynamics",
+    signature(dyn="NucDyn"),
+    function(dyn, plot.range=NULL, chr=NULL,
+             dyn.name="Dyn", expA.name="Ref 1", expB.name="Ref 2",
+             norm.factor=1, ...) {
+        invisible({
+            if (is.null(chr)) {
+                warning("No chromosome specified. ", 
+                        "If the input contained more than one chromosome, ",
+                        "they will apprear concatenated in the plot.")
+                dynRanges <- lapply(list(set.a(dyn), set.b(dyn)), ranges)
+            } else {
+                dynRanges <- lapply(
+                    list(set.a(dyn), set.b(dyn)),
+                    function (x) ranges(x[seqnames(x) == chr])
+                )
+            }
+
+            types <- unique(c(names(dynRanges[[1]]),
+                              names(dynRanges[[2]])))
+            dyn <- lapply(
+                types,
+                function (t)
+                    lapply(dynRanges, function(x) x[[t]])
+            )
+            names(dyn) <- types
+
+            if (is.null(plot.range)) {
+                ran <- range(do.call(c,
+                                     lapply(dynRanges,
+                                            GenomicRanges::unlist)))
+                plot.range <- c(start(ran), end(ran))
+            }
+
+            .plotCoverage(dyn$originals, plot.range=plot.range,
+                          dyn.name=dyn.name, expA.name=expA.name,
+                          expB.name=expB.name, norm.factor=norm.factor, ...)
+
+            .addDynamics(dyn, plot.range=plot.range, ...)
+        })
     }
-
-    types <- unique(c(names(dynRanges[[1]]), names(dynRanges[[2]])))
-    dyn <- lapply(
-        types,
-        function (t)
-            lapply(dynRanges, function(x) x[[t]])
-    )
-    names(dyn) <- types
-
-    if (is.null(plot.range)) {
-        ran <- range(do.call(c, lapply(dynRanges, GenomicRanges::unlist)))
-        plot.range <- c(start(ran), end(ran))
-    }
-
-    .plotCoverage(dyn$originals, plot.range=plot.range,
-                  dyn.name=dyn.name, expA.name=expA.name, expB.name=expB.name,
-                  norm.factor=norm.factor, ...)
-
-    .addDynamics(dyn, plot.range=plot.range, ...)
-})
+)

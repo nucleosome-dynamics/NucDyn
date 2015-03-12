@@ -9,3 +9,8 @@ setGeneric(
     "findHotspots",
     function(dyn, ...) standardGeneric("findHotspots")
 )
+
+setGeneric(
+    "plotDynamics",
+    function(dyn, ...) standardGeneric("plotDynamics")
+)
