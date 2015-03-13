@@ -1,5 +1,4 @@
 import(methods)
-import(IRanges)
 
 import(BiocGenerics)
 importMethodsFrom(BiocGenerics, mapply)
