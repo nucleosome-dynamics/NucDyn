@@ -1,4 +1,5 @@
 import(methods)
+import(IRanges)
 
 import(BiocGenerics)
 importMethodsFrom(BiocGenerics, mapply)
@@ -9,7 +10,7 @@ importFrom(parallel, mclapply)
 
 importMethodsFrom(IRanges, as.vector, sort, coverage, disjointBins, unlist,
                   space, ranges)
-importFrom(IRanges, IRanges, reduce, findOverlaps, PartitioningByEnd)
+importFrom(IRanges, IRanges, reduce, findOverlaps)
 
 importClassesFrom(GenomicRanges, GRangesList)
 importMethodsFrom(GenomicRanges, split, seqnames)
