@@ -7,6 +7,7 @@ Author: Ricard Illa
 Maintainer: Ricard Illa <ricard.illa@irbbarcelona.org>
 Description: Single nucleosome molecule dynamics bewteen two reference states
 License: FreeBSD
-Imports: methods, S4Vectors, BiocGenerics, IRanges, GenomicRanges, nucleR, parallel
+Depends: GenomicRanges
+Imports: methods, S4Vectors, BiocGenerics, IRanges, nucleR, parallel
 LazyLoad: yes
 Packaged: 2014-08-21 15:12:54 UTC; rilla
