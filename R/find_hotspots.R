@@ -15,7 +15,8 @@
     return(as.numeric(cov))
 }
 
-.peakCoupledParams <- function (ranA, ranB, range, threshold, trim.ends, useOptim)
+.peakCoupledParams <- function (ranA, ranB, range, threshold, trim.ends,
+                                useOptim)
 {  # Given two ranged data of reads that are coupled (ex: left and right
    # shifts, inserts and evictions), return the peaks
     width <- length(range[1]:range[2])
@@ -53,7 +54,8 @@
     if (!is.null(myPeaks) & length(myPeaks) > 0) {
         # join, order and add scores to peaks
         ordered <- order(myPeaks)
-        myPeaks <- data.frame(peaks=myPeaks[ordered], score=filtered[myPeaks][ordered])
+        myPeaks <- data.frame(peaks=myPeaks[ordered],
+                              score=filtered[myPeaks][ordered])
 
         # only peaks with at least 1 whole read
         myPeaks[is.na(myPeaks$score), "score"] <- 0
@@ -91,7 +93,8 @@
 {  # Return a data frame for the peaks of the shifts with its
    # corresponding classification name
     myPeaks <- .peakCoupledParams(dyn$left.shifts[[1]], dyn$right.shifts[[1]],
-                                  range, threshold, trim.ends, useOptim=useOptim)
+                                  range, threshold, trim.ends,
+                                  useOptim=useOptim)
     if (!is.null(myPeaks) && nrow(myPeaks)) {
         sense <- .getSense(myPeaks$score, c("+", "-"))
 
@@ -104,10 +107,12 @@
     }
 }
 
-.containedPeaks <- function(dyn, range, threshold="60%", trim.ends=25, useOptim)
+.containedPeaks <- function(dyn, range, threshold="60%", trim.ends=25,
+                            useOptim)
 {
     myPeaks <- .peakCoupledParams(dyn$containedA[[1]], dyn$containedB[[2]],
-                                  range, threshold, trim.ends, useOptim=useOptim)
+                                  range, threshold, trim.ends,
+                                  useOptim=useOptim)
     if (!is.null(myPeaks) && nrow(myPeaks)) {
         sense <- .getSense(myPeaks$score, c("AinB", "BinA"))
 
@@ -124,7 +129,8 @@
 {  # Return a data frame for the peaks of the indels with its
    # corresponding classification name
     myPeaks <- .peakCoupledParams(dyn$indels[[1]], dyn$indels[[2]],
-                                 range, threshold, trim.ends, useOptim=useOptim)
+                                  range, threshold, trim.ends,
+                                  useOptim=useOptim)
     if (!is.null(myPeaks) && nrow(myPeaks)) {
         sense <- .getSense(myPeaks$score, c("INCLUSION", "EVICTION"))
 
@@ -186,20 +192,39 @@
     }
 }
 
-.merger <- function(overlap, peaksA, peaksB, mergeKind, same.magnitude)
-{  # Function that returns which new peak to create and which ones
-   # to delete after a merge. Used in an lapply in mergeShifts and
-   # in mergeShiftsIndels
+.merger <- function(overlap, peaksA, peaksB, mergeKind, same.magnitude,
+                    nuc.peaks=NULL)
+{   # Function that returns which new peak to create and which ones
+    # to delete after a merge. Used in an lapply in mergeShifts and
+    # in mergeShiftsIndels
+
+    .isSameNuc <- function(coord1, coord2, peaks)
+    {
+        whichPeak <- function(peaks, pos)
+            which(start(peaks) <= pos &
+                  end(peaks) >= pos)
+
+        nuc1 <- whichPeak(peaks, coord1)
+        nuc2 <- whichPeak(peaks, coord2)
+
+        return(length(nuc1) == 1 &&
+               length(nuc2) == 1 &&
+               nuc1 == nuc2)
+    }
+
     h1 <- queryHits(overlap)
     h2 <- subjectHits(overlap)
+    e1 <- peaksA[h1, ]
+    e2 <- peaksB[h2, ]
 
-    # in shift mergings, only look at adjacent peaks
-    if ((mergeKind == "shift-shift") && (h2 - h1 != 1)) {
+    # in shift mergings, only look at adjacent peaks belonging to the same
+    # nucleosome
+    if (mergeKind == "shift-shift" &&
+          (h2 - h1 != 1 ||  # TRUE if reads are not adjacent
+           !.isSameNuc(e1$coord, e2$coord, nuc.peaks))) {
         return(NULL)
     }
 
-    e1 <- peaksA[h1, ]
-    e2 <- peaksB[h2, ]
     mergedPair <- rbind(e1, e2)
 
     # check if same magnitude
@@ -219,8 +244,8 @@
 }
 
 .mergeShifts <- function (shift.peaks, nuc.width, mergeKind="shift-shift",
-                          same.magnitude)
-{  # Merge shifts
+                          same.magnitude, nuc.peaks)
+{   # Merge shifts
     if (nrow(shift.peaks) == 0) {
         return(shift.peaks)
     }
@@ -233,7 +258,8 @@
         toRmAndAdd <- lapply(1:length(ovlp),
                              function(i) .merger(ovlp[i], shift.peaks,
                                                 shift.peaks, mergeKind,
-                                                same.magnitude))
+                                                same.magnitude,
+                                                nuc.peaks=nuc.peaks))
         shifts2rm <- unlist(lapply(toRmAndAdd,
                                    function(i) c(i$a2rm, i$b2rm)))
         newPeaks <- do.call("rbind",
@@ -285,11 +311,13 @@
     return(list(shifts=shift.peaks, indels=indel.peaks))
 }
 
-.combinePeaks <- function(shift.peaks, indel.peaks, nuc.width, same.magnitude)
-{  # Merge peaks
+.combinePeaks <- function(shift.peaks, indel.peaks, nuc.width, same.magnitude,
+                          nuc.peaks)
+{   # Merge peaks
     # find overlaps of shifts
     shift.peaks <- .mergeShifts(shift.peaks, nuc.width=nuc.width,
-                                same.magnitude=same.magnitude)
+                                same.magnitude=same.magnitude,
+                                nuc.peaks=nuc.peaks)
 
     # find overlaps between indels and (new) shifts
     merged <- .mergeShiftsIndels(shift.peaks, indel.peaks, nuc.width=nuc.width,
@@ -299,7 +327,9 @@
 
     # another round in the shifts for possible mid-distance combinations
     shift.peaks <- .mergeShifts(shift.peaks, mergeKind="shift-shift_again",
-                                nuc.width=nuc.width, same.magnitude=same.magnitude)
+                                nuc.width=nuc.width,
+                                same.magnitude=same.magnitude,
+                                nuc.peaks=nuc.peaks)
 
     return(list(shifts=shift.peaks, indels=indel.peaks))
 }
@@ -319,12 +349,20 @@
     endsB <- as.integer(end(readsB))
     readNumB <- as.integer(length(startsB))
 
-    countOut <- as.double(replicate(coordNum, 0)) 
+    countOut <- as.double(replicate(coordNum, 0))
 
     .C(myFun, coords, coordNum,
        startsA, endsA, readNumA,
        startsB, endsB, readNumB,
        out=countOut)$out
+}
+
+.getPeaks <- function(reads, nuc.width)
+{   # to do a nucleosome peak calling
+    cov <- coverage.rpm(RangedData(reads))[[1]]
+    filtered <- filterFFT(cov, pcKeepComp=0.01)
+    peaks <- peakDetection(filtered, threshold="25%", score=FALSE,
+                           width=nuc.width)
 }
 
 .findInRange <- function (dyn, range, nuc.width=120, combined=TRUE,
@@ -335,13 +373,18 @@
         range <- sapply(c(start, end), function(f) f(wholeRange))
     }
 
-    shift.peaks <- .shiftPeaks(dyn, range, threshold=threshold, useOptim=useOptim)
-    indel.peaks <- .indelPeaks(dyn, range, threshold=threshold, useOptim=useOptim)
-    contained.peaks <- .containedPeaks(dyn, range, threshold=threshold, useOptim=useOptim)
+    shift.peaks <- .shiftPeaks(dyn, range, threshold=threshold,
+                               useOptim=useOptim)
+    indel.peaks <- .indelPeaks(dyn, range, threshold=threshold,
+                               useOptim=useOptim)
+    contained.peaks <- .containedPeaks(dyn, range, threshold=threshold,
+                                       useOptim=useOptim)
 
     if (combined) {
+        nuc.peaks <- .getPeaks(dyn$originals[[1]], nuc.width=nuc.width)
         merged <- .combinePeaks(shift.peaks, indel.peaks, nuc.width=nuc.width,
-                                same.magnitude=same.magnitude)
+                                same.magnitude=same.magnitude,
+                                nuc.peaks=nuc.peaks)
         shift.peaks <- merged$shifts
         indel.peaks <- merged$indels
     }
@@ -352,12 +395,15 @@
     # Relative number of reads involved in the hotspot
     numReads <- mean(unlist(lapply(c(1, 2),
                             function (n)
-                                length(.subsetReads(dyn$originals[[n]], range)))))
+                                length(.subsetReads(dyn$originals[[n]],
+                                                    range)))))
     #all$freads <- round((all$nreads/numReads) * 100) / 100
     all$freads <- all$nreads/numReads
 
     # Fraction of reads involved in position
-    readsInvolved <- .getReadsInvolved(all$coord, dyn$originals[[1]], dyn$originals[[2]])
+    readsInvolved <- .getReadsInvolved(all$coord,
+                                       dyn$originals[[1]],
+                                       dyn$originals[[2]])
     all$hreads <- round((all$nreads/readsInvolved) * 100) / 100
 
     return(all)
@@ -380,7 +426,8 @@ setMethod(
             chrDyn <- mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
 
             hs <- .findInRange(chrDyn, range=c(), nuc.width=nuc.width,
-                               combined=combined, same.magnitude=same.magnitude,
+                               combined=combined,
+                               same.magnitude=same.magnitude,
                                threshold=threshold, useOptim=useOptim)
             if (nrow(hs)) {
                 hs$chr <- chr

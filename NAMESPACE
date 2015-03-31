@@ -3,6 +3,7 @@ import(methods)
 import(BiocGenerics)
 importMethodsFrom(BiocGenerics, mapply)
 
+importFrom(nucleR, coverage.rpm)
 importMethodsFrom(nucleR, filterFFT, peakDetection)
 
 importFrom(parallel, mclapply)
