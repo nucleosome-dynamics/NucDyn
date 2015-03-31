@@ -10,8 +10,8 @@ importFrom(parallel, mclapply)
 
 importMethodsFrom(IRanges, as.vector, sort, coverage, disjointBins, unlist,
                   space, ranges, split)
-importFrom(IRanges, IRanges, reduce, findOverlaps, Rle, levels, queryHits,
-           subjectHits)
+importFrom(IRanges, IRanges, RangedData, reduce, findOverlaps, Rle, levels,
+           queryHits, subjectHits)
 
 importClassesFrom(GenomicRanges, GRangesList)
 importMethodsFrom(GenomicRanges, seqnames)
