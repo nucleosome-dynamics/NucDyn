@@ -19,4 +19,4 @@ importMethodsFrom(GenomicRanges, seqnames)
 importFrom(GenomicRanges, GRanges)
 
 useDynLib(NucDyn)
-export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b)
+export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b, combiner)

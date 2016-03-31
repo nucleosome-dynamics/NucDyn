@@ -326,25 +326,10 @@
     }
 }
 
-.merger <- function(overlap, peaksA, peaksB, mergeKind, same.magnitude,
-                    nuc.peaks=NULL)
+.merger <- function(overlap, peaksA, peaksB, mergeKind, same.magnitude)
 {   # Function that returns which new peak to create and which ones
     # to delete after a merge. Used in an lapply in mergeShifts and
     # in mergeShiftsIndels
-
-    .isSameNuc <- function(coord1, coord2, peaks)
-    {
-        whichPeak <- function(pos, peaks)
-            which(start(peaks) <= pos &
-                  end(peaks) >= pos)
-
-        nucs <- unlist(lapply(list(coord1,
-                                   coord2),
-                              whichPeak,
-                              peaks))
-
-        return(length(nucs) == 2 && length(unique(nucs)) == 1)
-    }
 
     h1 <- queryHits(overlap)
     h2 <- subjectHits(overlap)
@@ -355,11 +340,15 @@
     # nucleosome
     if (mergeKind == "shift-shift") {
         not.adjacent <- h2 - h1 != 1  # TRUE if reads are not adjacent
-        different.nuc <- !.isSameNuc(e1$coord, e2$coord, nuc.peaks)
+        different.nuc <- (e1$nuc == 0 ||
+                          e2$nuc == 0 ||
+                          e1$nuc != e2$nuc)
         if (not.adjacent || different.nuc) {
             return(NULL)
         }
     }
+
+    nuc <- c(4, 5)
 
     mergedPair <- rbind(e1, e2)
 
@@ -377,14 +366,23 @@
                                               type   = newType,
                                               nreads = sum(nreads),
                                               start  = min(start),
-                                              end    = max(end)))))
+                                              end    = max(end),
+                                              chr    = unique(chr),
+                                              nuc    = ifelse(length(unique(nuc)) == 1,
+                                                              nuc[[1]],
+                                                              0),
+                                              freads = mean(freads),
+                                              hreads = mean(hreads)))))
     } else {
         return(NULL)
     }
 }
 
+.seq_lapply <- function (X, FUN, ...)
+    lapply(seq_along(X), function (i) FUN(X[i], ...))
+
 .mergeShifts <- function (shift.peaks, nuc.width, mergeKind="shift-shift",
-                          same.magnitude, nuc.peaks)
+                          same.magnitude)
 {   # Merge shifts
     if (nrow(shift.peaks) == 0) {
         return(shift.peaks)
@@ -395,16 +393,15 @@
     ovlp <- findOverlaps(shift.ran, ignoreSelf=TRUE, ignoreRedundant=TRUE)
 
     if (length(ovlp) > 0) {
-        toRmAndAdd <- lapply(1:length(ovlp),
-                             function(i) .merger(ovlp[i], shift.peaks,
-                                                 shift.peaks, mergeKind,
-                                                 same.magnitude,
-                                                 nuc.peaks=nuc.peaks))
-        shifts2rm <- unlist(lapply(toRmAndAdd,
-                                   function(i) c(i$a2rm, i$b2rm)))
-        newPeaks <- do.call("rbind",
-                            lapply(toRmAndAdd,
-                                   function(i) i$newPeak))
+        toRmAndAdd <- .seq_lapply(ovlp,
+                                  .merger,
+                                  shift.peaks,
+                                  shift.peaks,
+                                  mergeKind,
+                                  same.magnitude)
+
+        shifts2rm <- unlist(lapply(toRmAndAdd, `[`, c("a2rm", "b2rm")))
+        newPeaks <- do.call("rbind", lapply(toRmAndAdd, `[[`, "newPeak"))
 
         if (length(shifts2rm) > 0) {
             shift.peaks <- shift.peaks[-shifts2rm, ]
@@ -429,19 +426,17 @@
     ovlp <- findOverlaps(shift.ran, indel.ran)
 
     if (length(ovlp) > 0) {
-        toRmAndAdd <- lapply(1:length(ovlp),
-                             function(i) .merger(ovlp[i],
-                                                 shift.peaks,
-                                                 indel.peaks,
-                                                 mergeKind,
-                                                 same.magnitude))
-        shift2rm <- unlist(lapply(toRmAndAdd,
-                                  function(i) i$a2rm))
-        indel2rm <- unlist(lapply(toRmAndAdd,
-                                  function(i) i$b2rm))
-        newPeaks <- do.call("rbind",
-                            lapply(toRmAndAdd,
-                                   function(i) i$newPeak))
+        toRmAndAdd <- .seq_lapply(ovlp,
+                                  .merger,
+                                  shift.peaks,
+                                  indel.peaks,
+                                  mergeKind,
+                                  same.magnitude)
+
+        shift2rm <- unlist(lapply(toRmAndAdd, `[[`, "a2rm"))
+        indel2rm <- unlist(lapply(toRmAndAdd, `[[`, "b2rm"))
+        newPeaks <- do.call("rbind", lapply(toRmAndAdd, `[[`, "newPeak"))
+
         if (length(shift2rm) > 0) {
             shift.peaks <- shift.peaks[-shift2rm, ]
         }
@@ -453,17 +448,17 @@
     return(list(shifts=shift.peaks, indels=indel.peaks))
 }
 
-.combinePeaks <- function(shift.peaks, indel.peaks, nuc.width, same.magnitude,
-                          nuc.peaks)
+.combinePeaks <- function(shift.peaks, indel.peaks, nuc.width, same.magnitude)
 {   # Merge peaks
     # find overlaps of shifts
     shift.peaks <- .mergeShifts(shift.peaks,
                                 nuc.width=nuc.width,
-                                same.magnitude=same.magnitude,
-                                nuc.peaks=nuc.peaks)
+                                same.magnitude=same.magnitude)
 
     # find overlaps between indels and (new) shifts
-    merged <- .mergeShiftsIndels(shift.peaks, indel.peaks, nuc.width=nuc.width,
+    merged <- .mergeShiftsIndels(shift.peaks,
+                                 indel.peaks,
+                                 nuc.width=nuc.width,
                                  same.magnitude=same.magnitude)
     shift.peaks <- merged$shifts
     indel.peaks <- merged$indels
@@ -471,8 +466,7 @@
     # another round in the shifts for possible mid-distance combinations
     shift.peaks <- .mergeShifts(shift.peaks, mergeKind="shift-shift_again",
                                 nuc.width=nuc.width,
-                                same.magnitude=same.magnitude,
-                                nuc.peaks=nuc.peaks)
+                                same.magnitude=same.magnitude)
 
     return(list(shifts=shift.peaks, indels=indel.peaks))
 }
@@ -534,15 +528,14 @@
 
     nuc.peaks <- .getPeaks(dyn$originals[[1]], nuc.width=nuc.width)
 
-    if (combined) {
-        merged <- .combinePeaks(shift.peaks,
-                                indel.peaks,
-                                nuc.width=nuc.width,
-                                same.magnitude=same.magnitude,
-                                nuc.peaks=nuc.peaks)
-        shift.peaks <- merged$shifts
-        indel.peaks <- merged$indels
-    }
+    #if (combined) {
+    #    merged <- .combinePeaks(shift.peaks,
+    #                            indel.peaks,
+    #                            nuc.width=nuc.width,
+    #                            same.magnitude=same.magnitude)
+    #    shift.peaks <- merged$shifts
+    #    indel.peaks <- merged$indels
+    #}
 
     all <- rbind(shift.peaks, indel.peaks, contained.peaks)
     all <- all[order(all$coord), ]
@@ -564,6 +557,36 @@
     all$hreads <- round((all$nreads/readsInvolved) * 100) / 100
 
     return(all)
+}
+
+.typeSplitter <- function (hs)
+    lapply(list(shifts=function (x) grepl("^SHIFT ", x),
+                indels=function (x) x == "INCLUSION" | x == "EVICTION",
+                contains=function (x) grepl("CONTAINED ", x)),
+           function (f) hs[f(hs$type), ])
+
+combiner <- function (hs, nuc.width, same.magnitude, mc.cores=1)
+{
+    chrIter <- function (chrom) {
+        message("Combining ", chrom)
+        chr.hs <- hs[hs$chr == chrom, ]
+        by.types <- .typeSplitter(chr.hs)
+
+        combined <- .combinePeaks(by.types$shifts,
+                                  by.types$indels,
+                                  nuc.width,
+                                  same.magnitude)
+
+        all <- rbind(combined$shifts,
+                     combined$indels,
+                     by.types$contains)
+        all[order(all$coord), ]
+    }
+
+    do.call(rbind,
+            .xlapply(unique(hs$chr),
+                     chrIter,
+                     mc.cores))
 }
 
 setMethod(
