@@ -312,6 +312,20 @@
     }
 }
 
+.whichPeak <- function(pos, peaks)
+{
+    # Given a coordinate and an IRanges of peaks, return to which peak the
+    # coordinate belongs.
+    # Return 0 if the coordinate belongs to no peak or to more than one peak.
+    n <- which(start(peaks) <= pos &
+               end(peaks) >= pos)
+    if (length(n) == 1) {
+        n
+    } else {
+        0
+    }
+}
+
 .merger <- function(overlap, peaksA, peaksB, mergeKind, same.magnitude,
                     nuc.peaks=NULL)
 {   # Function that returns which new peak to create and which ones
@@ -518,8 +532,9 @@
                                           c("CONTAINED BinA",
                                             "CONTAINED AinB"))
 
+    nuc.peaks <- .getPeaks(dyn$originals[[1]], nuc.width=nuc.width)
+
     if (combined) {
-        nuc.peaks <- .getPeaks(dyn$originals[[1]], nuc.width=nuc.width)
         merged <- .combinePeaks(shift.peaks,
                                 indel.peaks,
                                 nuc.width=nuc.width,
@@ -531,6 +546,8 @@
 
     all <- rbind(shift.peaks, indel.peaks, contained.peaks)
     all <- all[order(all$coord), ]
+
+    all$nuc <- sapply(all$coord, .whichPeak, nuc.peaks)
 
     # Relative number of reads involved in the hotspot
     numReads <- mean(unlist(lapply(c(1, 2),
