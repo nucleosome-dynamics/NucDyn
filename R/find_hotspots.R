@@ -359,20 +359,29 @@
         if (is.null(newType)) {
             return(NULL)
         }
+
+        xs <- rep(NA, ncol(mergedPair))
+        names(xs) <- names(mergedPair)
+        newPeak <- as.data.frame(as.list(xs))
+
+        newPeak$coord <- round(mean(mergedPair$coord))
+        newPeak$type <- newType
+        newPeak$nreads <- sum(mergedPair$nreads)
+        newPeak$start <- min(mergedPair$start)
+        newPeak$end <- max(mergedPair$end)
+        newPeak$chr <- unique(mergedPair$chr)
+
+        nucs <- unique(mergedPair$nuc)
+        newPeak$nuc <- ifelse(length(nucs) == 1, nucs, 0)
+
+        newPeak$totalReads <- unique(mergedPair$totalReads)
+        newPeak$freads <- newPeak$nreads / newPeak$totalReads
+        newPeak$readsInvolved <- sum(mergedPair$readsInvolved)
+        newPeak$hreads <- newPeak$nreads / newPeak$readsInvolved
+
         return(list(a2rm    = h1,
                     b2rm    = h2,
-                    newPeak = with(mergedPair,
-                                   data.frame(coord  = round(mean(coord)),
-                                              type   = newType,
-                                              nreads = sum(nreads),
-                                              start  = min(start),
-                                              end    = max(end),
-                                              chr    = unique(chr),
-                                              nuc    = ifelse(length(unique(nuc)) == 1,
-                                                              nuc[[1]],
-                                                              0),
-                                              freads = mean(freads),
-                                              hreads = mean(hreads)))))
+                    newPeak = newPeak))
     } else {
         return(NULL)
     }
@@ -502,8 +511,11 @@
                            width=nuc.width)
 }
 
-.findInRange <- function (dyn, range, nuc.width=120, combined=TRUE,
-                          same.magnitude=2, threshold="60%")
+.countReads <- function (set, range)
+    length(.subsetReads(set, range))
+
+.findInRange <- function (dyn, range, nuc.width=120, same.magnitude=2,
+                          threshold="60%")
 {
     if (is.null(range)) {
         wholeRange <- range(do.call("c", dyn$originals))
@@ -528,33 +540,20 @@
 
     nuc.peaks <- .getPeaks(dyn$originals[[1]], nuc.width=nuc.width)
 
-    #if (combined) {
-    #    merged <- .combinePeaks(shift.peaks,
-    #                            indel.peaks,
-    #                            nuc.width=nuc.width,
-    #                            same.magnitude=same.magnitude)
-    #    shift.peaks <- merged$shifts
-    #    indel.peaks <- merged$indels
-    #}
-
     all <- rbind(shift.peaks, indel.peaks, contained.peaks)
     all <- all[order(all$coord), ]
 
     all$nuc <- sapply(all$coord, .whichPeak, nuc.peaks)
 
     # Relative number of reads involved in the hotspot
-    numReads <- mean(unlist(lapply(c(1, 2),
-                            function (n)
-                                length(.subsetReads(dyn$originals[[n]],
-                                                    range)))))
-    #all$freads <- round((all$nreads/numReads) * 100) / 100
-    all$freads <- all$nreads/numReads
+    all$totalReads <- mean(sapply(dyn$originals, .countReads, range))
+    all$freads <- all$nreads / all$totalReads
 
     # Fraction of reads involved in position
-    readsInvolved <- .getReadsInvolved(all$coord,
-                                       dyn$originals[[1]],
-                                       dyn$originals[[2]])
-    all$hreads <- round((all$nreads/readsInvolved) * 100) / 100
+    all$readsInvolved <- .getReadsInvolved(all$coord,
+                                           dyn$originals[[1]],
+                                           dyn$originals[[2]])
+    all$hreads <- all$nreads / all$readsInvolved
 
     return(all)
 }
@@ -606,7 +605,6 @@ setMethod(
             hs <- .findInRange(chrDyn,
                                range=range,
                                nuc.width=nuc.width,
-                               combined=combined,
                                same.magnitude=same.magnitude,
                                threshold=threshold)
             if (nrow(hs)) {
@@ -619,11 +617,17 @@ setMethod(
 
         if (is.null(chr)) {
             hsLs <- .xlapply(chrs, chrIter, mc.cores=mc.cores)
-            return(do.call("rbind", hsLs))
+            hs <- do.call("rbind", hsLs)
         } else if (chr %in% chrs) {
-            return(chrIter(chr, range=range))
+            hs <- chrIter(chr, range=range)
         } else {
             stop("chromosome ", chr, " not found")
+        }
+
+        if (combined) {
+            combiner(hs, nuc.width, same.magnitude, mc.cores)
+        } else {
+            hs
         }
     }
 )
