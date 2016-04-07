@@ -101,14 +101,80 @@
     }
 
 .dyadPos <- function(ran)
-{
-    return(round((start(ran) + end(ran)) / 2))
-}
+    round((start(ran) + end(ran)) / 2)
 
 .setSizeTo <- function(set, readSize)
-{
-    return(IRanges(start=.dyadPos(set) - (readSize/2), width=readSize))
-}
+    IRanges(start=.dyadPos(set) - (readSize/2), width=readSize)
 
 .initEmptyVect <- function(n)
     as.integer(rep(0, n))
+
+.dlplyf <- function (data, splitter, fun, ...)
+    # Similar to dlply, but splits the data using a splitter function that
+    # should return a list of data.frames
+    lapply(splitter(data), fun, ...)
+
+.ddplyf <- function (data, splitter, fun, ...)
+    # Similar to ddply, but splits the data using a splitter function that
+    # should return a list of data.frames
+    do.call(rbind, .dlplyf(data, splitter, fun, ...))
+
+.xdlply_rep <- function (X, VAR, FUN, ..., report=FALSE, mc.cores=1)
+{   # multicore version of dlply that also reports the name of the element
+    # being processed
+    xs <- unique(X[[VAR]])
+    res <- .xlapply(xs,
+                    function (i) {
+                        if (report) {
+                            message("Starting ", i)
+                        }
+                        res <- FUN(X[X[[VAR]] == i, ], ...)
+                        if (report) {
+                            message(i, " done")
+                        }
+                        res
+                    },
+                    mc.cores=mc.cores)
+    names(res) <- xs
+    res
+}
+
+.xddply_rep <- function (X, VAR, FUN, ..., report=FALSE, mc.cores=1)
+    # multicore version of ddply that also reports the name of the element
+    # being processed
+    do.call(rbind,
+            .xdlply_rep(X,
+                        VAR,
+                        FUN,
+                        report=report,
+                        ...,
+                        mc.cores=mc.cores))
+
+.nmapply <- function (FUN, ..., MoreArgs=NULL)
+{   # Similar to mapply but using the names of the elements
+    args <- list(...)
+    ns <- unique(unlist(lapply(args, names)))
+    res <- lapply(ns,
+                  function (n)
+                      do.call(FUN,
+                              c(lapply(args, `[[`, n),
+                                MoreArgs)))
+    names(res) <- ns
+    res
+}
+
+.vectorMean <- function (...)
+{   # Get the mean of a number of numeric vectors
+    args <- list(...)
+    Reduce(`+`, args) / length(args)
+}
+
+compose <- function(...)
+{   # Function composition.
+    comp2 <- function(f, g) {
+        force(f)
+        force(g)
+        function(...) f(g(...))
+    }
+    Reduce(comp2, list(...))
+}

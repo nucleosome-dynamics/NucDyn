@@ -38,23 +38,6 @@
         NULL
     })
 
-.setThreshold <- function (threshold="60%", xs)
-{   # Handle a threshold possibly given as a string representing a precent
-    if (is.null(xs)) {
-        return(NULL)
-    }
-    if (is.character(threshold)) {
-        t <- quantile(xs[xs != 0], as.numeric(sub("%", "", threshold))/100)
-    } else {
-        t <- threshold
-    }
-    if (t < 1) {
-        return(1)
-    } else {
-        return(t)
-    }
-}
-
 .sumWithNulls <- function (x, y)
 {   # Sum two vectors and handle appropriately if one of them is NULL
     xcheck <- !is.null(x)
@@ -122,11 +105,6 @@
 .buildDf <- .handleNulls(function(p, f)
     data.frame(coord=p, nreads=round(f[p])))
 
-.applyThresh <- .handleNulls(function(df, t) {
-    df[is.na(df$nreads), "nreads"] <- 0
-    df[df$nreads > t, ]
-})
-
 .addRanges <- .handleNulls(function(df, cov) {
     set.range <- .getHsRanges(cov)
     idxs <- .whichRan(df$coord, set.range)
@@ -142,7 +120,7 @@
     df
 })
 
-.peakCoupledParams <- function (ranA, ranB, range, threshold, names)
+.peakCoupledParams <- function (ranA, ranB, range, names)
 {   # Given two ranged data of reads that are coupled (ex: left and right
     # shifts, inserts and evictions), return the peaks and their scores
 
@@ -160,19 +138,15 @@
     filtered <- lapply(by.sign, .myFilter)
 
     peak.dfs <- mapply(
-        function(f, n, t) {
+        function(f, n) {
             p <- .handleNulls(peakDetection)(f, threshold=0, score=FALSE)
             df <- .buildDf(p, f)
-            df <- .applyThresh(df, t)
             df <- .addRanges(df, f)
             df <- .addTypes(df, n)
             df
         },
         filtered, as.list(names),
-        SIMPLIFY=FALSE,
-        MoreArgs=list(.setThreshold(threshold,
-                        do.call(.sumWithNulls,
-                                unname(filtered))))
+        SIMPLIFY=FALSE
     )
 
     df <- do.call(rbind, peak.dfs)
@@ -199,7 +173,7 @@
          ref[getReorderer(y)])
 }
 
-.indelPeaks <- function(dyn, range, threshold="60%")
+.indelPeaks <- function(dyn, range)
 {
     reads <- lapply(dyn$originals,
                     function(x) .subsetReads(unique(.rmLongReads(x,
@@ -229,12 +203,10 @@
 
     set.range <- .getHsRanges(abs(diff))
 
-    thresh <- .setThreshold(threshold, abs(diff))
-
-    ips <- peakDetection(insert.prof, threshold=thresh, score=FALSE)
+    ips <- peakDetection(insert.prof, threshold=0, score=FALSE)
     ips <- data.frame(peak=ips, score=insert.prof[ips])
 
-    dps <- peakDetection(delete.prof, threshold=thresh, score=FALSE)
+    dps <- peakDetection(delete.prof, threshold=0, score=FALSE)
     dps <- data.frame(peak=dps, score=delete.prof[dps])
 
     idxs <- .whichRan(ips$peak, set.range)
@@ -348,13 +320,13 @@
         }
     }
 
-    nuc <- c(4, 5)
-
     mergedPair <- rbind(e1, e2)
 
     # check if same magnitude
     compNReads <- mergedPair$nreads
-    if (max(compNReads) / min(compNReads) <= same.magnitude) {
+    if (!(0 %in% compNReads) &&
+        (max(compNReads) / min(compNReads) <= same.magnitude)) {
+
         newType <- .typeNamer(e1$type, e2$type, mergeKind)
         if (is.null(newType)) {
             return(NULL)
@@ -507,15 +479,16 @@
 {   # to do a nucleosome peak calling
     cov <- coverage.rpm(RangedData(reads))[[1]]
     filtered <- filterFFT(cov, pcKeepComp=0.01)
-    peaks <- peakDetection(filtered, threshold="25%", score=FALSE,
+    peaks <- peakDetection(filtered,
+                           threshold="25%",
+                           score=FALSE,
                            width=nuc.width)
 }
 
 .countReads <- function (set, range)
     length(.subsetReads(set, range))
 
-.findInRange <- function (dyn, range, nuc.width=120, same.magnitude=2,
-                          threshold="60%")
+.findInRange <- function (dyn, range, nuc.width=120)
 {
     if (is.null(range)) {
         wholeRange <- range(do.call("c", dyn$originals))
@@ -525,16 +498,14 @@
     shift.peaks <- .peakCoupledParams(dyn$left.shifts[[1]],
                                       dyn$right.shifts[[1]],
                                       range,
-                                      threshold,
                                       c("SHIFT -",
                                         "SHIFT +"))
 
-    indel.peaks <- .indelPeaks(dyn, range, threshold=threshold)
+    indel.peaks <- .indelPeaks(dyn, range)
 
     contained.peaks <- .peakCoupledParams(dyn$containedA[[1]],
                                           dyn$containedB[[2]],
                                           range,
-                                          threshold,
                                           c("CONTAINED BinA",
                                             "CONTAINED AinB"))
 
@@ -566,9 +537,7 @@
 
 combiner <- function (hs, nuc.width, same.magnitude, mc.cores=1)
 {
-    chrIter <- function (chrom) {
-        message("Combining ", chrom)
-        chr.hs <- hs[hs$chr == chrom, ]
+    iterFun <- function (chr.hs) {
         by.types <- .typeSplitter(chr.hs)
 
         combined <- .combinePeaks(by.types$shifts,
@@ -581,18 +550,14 @@ combiner <- function (hs, nuc.width, same.magnitude, mc.cores=1)
                      by.types$contains)
         all[order(all$coord), ]
     }
-
-    do.call(rbind,
-            .xlapply(unique(hs$chr),
-                     chrIter,
-                     mc.cores))
+    .xddply_rep(hs, "chr", iterFun, report=TRUE, mc.cores=mc.cores)
 }
 
 setMethod(
     "findHotspots",
     signature(dyn="NucDyn"),
     function (dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE,
-              same.magnitude=2, threshold="60%", mc.cores=1) {
+              same.magnitude=2, threshold=NULL, mc.cores=1) {
         setA <- set.a(dyn)
         setB <- set.b(dyn)
 
@@ -604,9 +569,7 @@ setMethod(
             chrDyn <- mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
             hs <- .findInRange(chrDyn,
                                range=range,
-                               nuc.width=nuc.width,
-                               same.magnitude=same.magnitude,
-                               threshold=threshold)
+                               nuc.width=nuc.width)
             if (nrow(hs)) {
                 hs$chr <- chr
             }
@@ -624,10 +587,16 @@ setMethod(
             stop("chromosome ", chr, " not found")
         }
 
-        if (combined) {
-            combiner(hs, nuc.width, same.magnitude, mc.cores)
-        } else {
-            hs
+        if (!is.null(threshold)) {
+            message("applying threshold")
+            hs <- applyThreshold(hs, threshold)
         }
+
+        if (combined) {
+            message("combining hotspots")
+            hs <- combiner(hs, nuc.width, same.magnitude, mc.cores)
+        }
+
+        hs
     }
 )

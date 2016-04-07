@@ -8,7 +8,7 @@
     Find hotspots from a given nucleosome dynamics.
 }
 \usage{
-    \S4method{findHotspots}{NucDyn}(dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold="60\%", mc.cores=1)
+    \S4method{findHotspots}{NucDyn}(dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold=NULL, mc.cores=1)
 }
 \arguments{
     \item{dyn}{

@@ -14,3 +14,8 @@ setGeneric(
     "plotDynamics",
     function(dyn, ...) standardGeneric("plotDynamics")
 )
+
+setGeneric(
+    "applyThreshold",
+    function(hs, threshold) standardGeneric("applyThreshold")
+)
