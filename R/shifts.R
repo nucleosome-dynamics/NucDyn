@@ -26,6 +26,9 @@
 
 .buildZoneRange <- function(start, end, width)
 {
+    if (any(sapply(list(start, end), length) == 0)) {
+        return(NULL)
+    }
     npos <- ceiling((end - start) / width)
     zone.starts <- 0:(npos-1) * width + start
     zone.rans <- IRanges(start=zone.starts, width=width)
@@ -158,6 +161,12 @@
     zone.b <- .buildZoneRange(start(sets.range) + sep,
                               end(sets.range),
                               win.size)
+
+    if (any(sapply(list(zone.a, zone.b), is.null))) {
+        return(list(left=list(IRanges(), IRanges()),
+                    right=list(IRanges(), IRanges()),
+                    rest=list(IRanges(), IRanges())))
+    }
 
     a.shrinked <- .shrinker(zone.a, except.start=1)
     b.shrinked <- .shrinker(zone.b, except.end=length(zone.b))

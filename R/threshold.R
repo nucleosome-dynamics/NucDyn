@@ -43,12 +43,14 @@
                             maxs),
                 mc.cores=mc.cores)
 
-.fromHss <- function (hss, mc.cores=1)
+variableThreshFromHss <- function (..., mc.cores=1)
 {
+    hss <- list(...)
     max.by.rep <- lapply(hss, dlply, "chr", function(x) max(x$end))
     maxs <- do.call(.nmapply, c(max, max.by.rep))
     lines <- lapply(hss, .processHs, maxs, mc.cores=mc.cores)
-    lapply(do.call(.averageThreshs, lines), as.data.frame)
+    t <- lapply(do.call(.averageThreshs, lines), as.data.frame)
+    VariableThreshold(x=t, scale=3)
 }
 
 getVariableThreshold <- function (..., mc.cores=1)
@@ -66,26 +68,27 @@ getVariableThreshold <- function (..., mc.cores=1)
                   threshold=NULL,
                   mc.cores=mc.cores)
     message("Averaging the different replicates")
-    VariableThreshold(x=.fromHss(hss, mc.cores=mc.cores))
+    do.call(variableThreshFromHss,
+            c(hss, list(mc.cores=mc.cores)))
 }
 
 setMethod(
     "applyThreshold",
-    signature(threshold="numeric"),
-    function (hs, threshold)
+    signature(hs="data.frame", threshold="numeric"),
+    function (hs, threshold, scale=NULL)
         hs[hs$nreads >= threshold, ]
 )
 
 setMethod(
     "applyThreshold",
-    signature(threshold="integer"),
+    signature(hs="data.frame", threshold="integer"),
     function (hs, threshold)
         applyThreshold(hs, as.numeric(threshold))
 )
 
 setMethod(
     "applyThreshold",
-    signature(threshold="character"),
+    signature(hs="data.frame", threshold="character"),
     function (hs, threshold) {
         relative <- as.numeric(sub("%", "", threshold)) / 100
         ddply(hs,
@@ -96,5 +99,34 @@ setMethod(
                   thresh <- quantile(df$nreads, relative)
                   df[df$nreads >= thresh, ]
               })
+    }
+)
+
+setMethod(
+    "applyThreshold",
+    signature(hs="data.frame", threshold="VariableThreshold"),
+    function (hs, threshold, scale=NULL) {
+
+        if (is.null(scale)) {
+            scale <- threshold@scale
+        }
+
+        applyThreshVect <- function (hs, t)
+            hs[hs$nreads >= (t[hs$coord] * scale), ]
+
+        applyAtChr <- function (chr.hs, chr.thresh) {
+            res <- do.call(rbind,
+                           .nmapply(applyThreshVect,
+                                    .typeSplitter(chr.hs),
+                                    chr.thresh))
+            res[order(res$coord), ]
+        }
+
+        res <- do.call(rbind,
+                       .nmapply(applyAtChr,
+                                dlply(hs, "chr", identity),
+                                threshold@x))
+        rownames(res) <- NULL
+        res
     }
 )

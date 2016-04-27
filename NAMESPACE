@@ -22,4 +22,4 @@ importFrom(GenomicRanges, GRanges)
 
 useDynLib(NucDyn)
 export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b, combiner,
-       getVariableThreshold, applyThreshold)
+       getVariableThreshold, applyThreshold, variableThreshFromHss)

@@ -28,17 +28,11 @@ setMethod(
             chrs,
             function(chr) {
                 message(paste("Starting", chr))
-                #if (chr == "chrXII") {
-                #    saveit <- TRUE
-                #} else {
-                #    saveit <- FALSE
-                #}
-                saveit <- FALSE
                 dyn <- .nucleosomeDynamics(mySets=lapply(sets, "[", chr),
                                            maxLen=maxLen, roundPow=roundPow,
                                            equalSize=equalSize,
                                            readSize=readSize, maxDiff=maxDiff,
-                                           saveit=saveit)
+                                           saveit=FALSE)
                 message(paste(chr, "done"))
                 dyn
             },
@@ -195,10 +189,7 @@ setMethod(
             subsetListA,
             subsetListB
         )
-    }
 
-    if (saveit) {
-        save(mySets, file="~/segfoo.RData")
     }
 
     newSets <- .shifts(mySets, dist=maxDiff)

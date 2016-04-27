@@ -550,7 +550,9 @@ combiner <- function (hs, nuc.width, same.magnitude, mc.cores=1)
                      by.types$contains)
         all[order(all$coord), ]
     }
-    .xddply_rep(hs, "chr", iterFun, report=TRUE, mc.cores=mc.cores)
+    res <- .xddply_rep(hs, "chr", iterFun, report=FALSE, mc.cores=mc.cores)
+    rownames(res) <- NULL
+    res
 }
 
 setMethod(

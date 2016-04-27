@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
 VariableThreshold <- setClass("VariableThreshold",
-                              representation(x="list"))
+                              representation(x="list",
+                                             scale="numeric"))
 
 setMethod(
     "show",
