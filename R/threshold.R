@@ -111,8 +111,13 @@ setMethod(
             scale <- threshold@scale
         }
 
-        applyThreshVect <- function (hs, t)
+        applyThreshVect <- function (hs, t) {
+            diff <- max(hs$coord) - length(t)
+            if (diff > 0) {
+                t <- c(t, rep(0, diff))
+            }
             hs[hs$nreads >= (t[hs$coord] * scale), ]
+        }
 
         applyAtChr <- function (chr.hs, chr.thresh) {
             res <- do.call(rbind,
