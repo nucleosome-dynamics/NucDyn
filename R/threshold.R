@@ -171,3 +171,17 @@ setMethod(
         res
     }
 )
+
+setMethod(
+    "applyThreshold",
+    signature(hs="data.frame", threshold="ThresholdByType"),
+    function (hs, threshold) {
+        res <- do.call(rbind,
+                       .nmapply(function (hs, t) hs[hs$nreads >= t, ],
+                               .typeSplitter(hs),
+                               list(shifts=threshold@shifts,
+                                    indels=threshold@indels,
+                                    contains=threshold@contains)))
+        res[order(res$coord), ]
+    }
+)
