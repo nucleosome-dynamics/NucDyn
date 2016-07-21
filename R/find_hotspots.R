@@ -140,12 +140,14 @@
     peak.dfs <- mapply(
         function(f, n) {
             p <- .handleNulls(peakDetection)(f, threshold=0, score=FALSE)
+            p <- p[!is.na(p)]
             df <- .buildDf(p, f)
             df <- .addRanges(df, f)
             df <- .addTypes(df, n)
             df
         },
-        filtered, as.list(names),
+        filtered,
+        as.list(names),
         SIMPLIFY=FALSE
     )
 
