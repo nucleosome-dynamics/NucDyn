@@ -132,7 +132,7 @@ setMethod(
                                 readSize=140, maxDiff=74, saveit=FALSE)
 {
     mySets <- lapply(mySets, .toIRanges)
-    originals <- mySets
+    #originals <- mySets
 
     # remove reads that are too long
     mySets <- lapply(mySets, .rmLongReads, maxLen=maxLen)
@@ -146,6 +146,8 @@ setMethod(
         mySets <- lapply(mySets, IRanges::unique)
         mySets <- lapply(mySets, sort)  # keep them sorted
 
+        originals <- mySets
+
         # reads considered to be the same with a small variance distance allowed
         subsetList <- .equalsAtDist(mySets, maxDist=5)
         newSets <- .separateGroups(mySets, subsetList)
@@ -157,6 +159,8 @@ setMethod(
         mySets <- lapply(mySets, .setRounder, pow=roundPow)
         mySets <- lapply(mySets, IRanges::unique)
         mySets <- lapply(mySets, sort)  # keep them sorted
+
+        originals <- mySets
 
         # pairs that start and end at the same position
         subsetList <- .equals(mySets)
