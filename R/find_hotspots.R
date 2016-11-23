@@ -91,34 +91,8 @@
     return(vs)
 }
 
-.getHsRanges <- function(xs)
-{   # Get all the hotspots ranges. Each range will be a non-zero range
-    # separated by local minima
-    nums <- c(xs, 0, 0)
-    lims <- which(diff(sign(diff(nums))) > 0)
-    all.ranges <- IRanges(start=c(1,
-                                  lims[-length(lims)] + 2),
-                          end=lims)
-    return(all.ranges[nums[start(all.ranges)] != 0])
-}
-
 .buildDf <- .handleNulls(function(p, f)
     data.frame(coord=p, nreads=round(f[p])))
-
-.addRanges <- .handleNulls(function(df, cov) {
-    set.range <- .getHsRanges(cov)
-    idxs <- .whichRan(df$coord, set.range)
-    df <- df[as.logical(idxs), ]
-    rs <- set.range[idxs]
-    df$start <- start(rs)
-    df$end <- end(rs)
-    df
-})
-
-.addTypes <- .handleNulls(function(df, n) {
-    df$type <- n
-    df
-})
 
 .getAreas <- function (from, to, xs) {
     areaRange <- function (from, to, xs)
@@ -129,79 +103,32 @@
            MoreArgs=list(xs))
 }
 
-.peakCoupledParams <- function (ranA, ranB, originals.cov, range, names)
+.peakCoupledParams <- function (ranA, ranB, originals.cov, range, names, filtering=identity)
 {   # Given two ranged data of reads that are coupled (ex: left and right
     # shifts, inserts and evictions), return the peaks and their scores
-
-    rans <- lapply(list(ranA,
-                        ranB),
-                   .subsetReads,
-                   range)
-
-    covs <- do.call(.makeVectsEqual,
-                    lapply(rans,
-                           coverage))
-
-    #diff <- covs[[2]] - covs[[1]]
-    #by.sign <- .splitBySign(diff)
-    #filtered <- lapply(by.sign, .myFilter)
-
-    #peak.dfs <- mapply(
-    #    function(f, n) {
-    #        p <- .handleNulls(peakDetection)(f, threshold=0, score=FALSE)
-    #        df <- .buildDf(p, f)
-    #        df <- .addRanges(df, f)
-    #        df <- .addTypes(df, n)
-    #        df
-    #    },
-    #    filtered,
-    #    as.list(names),
-    #    SIMPLIFY=FALSE
-    #)
-
-    #df <- do.call(rbind, peak.dfs)
-
-    #if (is.null(df) || nrow(df) == 0) {
-    #    return(data.frame(chrom  = numeric(0),
-    #                      coord  = numeric(0),
-    #                      type   = numeric(0),
-    #                      nreads = numeric(0),
-    #                      start  = numeric(0),
-    #                      end    = numeric(0)))
-    #}
-
-    #ordered.df <- df[order(df$coord), ]
-    #return(ordered.df)
 
     rans <- lapply(list(ranA, ranB), .subsetReads, range)
 
     covs <- do.call(.makeVectsEqual, lapply(rans, coverage))
     diff <- as.vector(covs[[2]] - covs[[1]])
     by.sign <- .splitBySign(diff)
-    filtered <- lapply(by.sign, .myFilter)
+    filtered <- lapply(by.sign, filtering)
 
     peak.dfs <- mapply(
         .handleNulls(function (f, n) {
-            # build data.frame
-            df <- data.frame(coord=peakDetection(f,
-                                                 threshold=0,
-                                                 score=FALSE,
-                                                 min.cov=0))
-            df$nreads <- round(f[df$coord])
-            # add ranges
-            set.range <- .getHsRanges(f)
-            idxs <- .whichRan(df$coord, set.range)
-            df <- df[as.logical(idxs), ,drop=FALSE]
-            rs <- set.range[idxs]
-            df$start <- start(rs)
-            df$end <- end(rs)
-            # add types
-            df$type <- n
-            # set score
-            df$changedArea  <- .getAreas(df$start, df$end, diff)
-            df$involvedArea <- .getAreas(df$start, df$end, originals.cov)
-            df$score <- df$changedArea / df$involvedArea
-            df
+            rans <- .getHsRanges(f)
+            coord <- .peaksFromRanges(f, rans)
+            changedArea <- .getAreas(start(rans), end(rans), diff)
+            involvedArea <- .getAreas(start(rans), end(rans), originals.cov)
+
+            data.frame(coord        = coord,
+                       nreads       = round(f[coord]),
+                       start        = start(rans),
+                       end          = end(rans),
+                       type         = n,
+                       changedArea  = changedArea,
+                       involvedArea = involvedArea,
+                       score        = changedArea / involvedArea)
         }),
         filtered,
         as.list(names),
@@ -325,7 +252,7 @@
     dps$end <- end(rs)
 
     ips$changedArea <- .getAreas(ips$start, ips$end, insert.prof)
-    ips$involvedArea <- .getAreas(ips$start, ips$end, filtered[[1]])
+    ips$involvedArea <- .getAreas(ips$start, ips$end, filtered[[2]])
 
     dps$changedArea <- .getAreas(dps$start, dps$end, delete.prof)
     dps$involvedArea <- .getAreas(dps$start, dps$end, filtered[[1]])
@@ -602,7 +529,7 @@
 .countReads <- function (set, range)
     length(.subsetReads(set, range))
 
-.findInRange <- function (dyn, range, nuc.width=120)
+.findInRange <- function (dyn, range, nuc.width=120, filtering=identity)
 {
     if (is.null(range)) {
         wholeRange <- range(do.call("c", dyn$originals))
@@ -616,7 +543,8 @@
                                       originals.cov,
                                       range,
                                       c("SHIFT -",
-                                        "SHIFT +"))
+                                        "SHIFT +"),
+                                      filtering=filtering)
 
     indel.peaks <- .indelPeaks(dyn, range)
 
@@ -681,7 +609,8 @@ setMethod(
     "findHotspots",
     signature(dyn="NucDyn"),
     function (dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE,
-              same.magnitude=2, threshold=NULL, mc.cores=1) {
+              same.magnitude=2, threshold=NULL, filtering=identity,
+              mc.cores=1) {
         setA <- set.a(dyn)
         setB <- set.b(dyn)
 
@@ -693,7 +622,8 @@ setMethod(
             chrDyn <- mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
             hs <- .findInRange(chrDyn,
                                range=range,
-                               nuc.width=nuc.width)
+                               nuc.width=nuc.width,
+                               filtering=filtering)
             if (nrow(hs)) {
                 hs$chr <- chr
             }

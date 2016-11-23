@@ -4,7 +4,7 @@
 
 void shifts (int *xs, int *nx, int *ys, int *ny,
              int *x_left, int *y_left, int *x_right, int *y_right,
-             int *max_dist)
+             int *max_dist, int *min_dist)
 {
     int **S;
 
@@ -12,10 +12,10 @@ void shifts (int *xs, int *nx, int *ys, int *ny,
     S = alloc_table(*nx, *ny);
     init_table(S, *nx, *ny);
 
-    fill_table(S, *max_dist,
+    fill_table(S, *max_dist, *min_dist,
                xs, *nx, ys, *ny);
 
-    traceback(S, *max_dist,
+    traceback(S, *max_dist, *min_dist,
               xs, x_right, x_left, *nx,
               ys, y_right, y_left, *ny);
 

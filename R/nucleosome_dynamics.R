@@ -4,11 +4,15 @@ setMethod(
     "nucleosomeDynamics",
     signature(setA="IRanges", setB="IRanges"),
     function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
-             maxDiff=74) {
+             maxDiff=74, minDiff=10) {
         sets <- list(setA, setB)
-        myDyn <- .nucleosomeDynamics(mySets=sets, maxLen=maxLen,
-                                     roundPow=roundPow, equalSize=equalSize,
-                                     readSize=readSize, maxDiff=maxDiff)
+        myDyn <- .nucleosomeDynamics(mySets=sets,
+                                     maxLen=maxLen,
+                                     roundPow=roundPow,
+                                     equalSize=equalSize,
+                                     readSize=readSize,
+                                     maxDiff=maxDiff,
+                                     minDiff=minDiff)
         # we wrap it in a list so that buildNucDyn behaves as expected
         myDyn <- .buildNucDyn(list("*"=myDyn), equalSize)
         myDyn
@@ -19,7 +23,7 @@ setMethod(
     "nucleosomeDynamics",
     signature(setA="RangedData", setB="RangedData"),
     function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
-             maxDiff=74, mc.cores=1) {
+             maxDiff=74, minDiff=10, mc.cores=1) {
         sets <- list(setA, setB)
 
         # do it for every chromosome separately
@@ -29,10 +33,12 @@ setMethod(
             function(chr) {
                 message(paste("Starting", chr))
                 dyn <- .nucleosomeDynamics(mySets=lapply(sets, "[", chr),
-                                           maxLen=maxLen, roundPow=roundPow,
+                                           maxLen=maxLen,
+                                           roundPow=roundPow,
                                            equalSize=equalSize,
-                                           readSize=readSize, maxDiff=maxDiff,
-                                           saveit=FALSE)
+                                           readSize=readSize,
+                                           maxDiff=maxDiff,
+                                           minDiff=minDiff)
                 message(paste(chr, "done"))
                 dyn
             },
@@ -51,7 +57,7 @@ setMethod(
     "nucleosomeDynamics",
     signature(setA="GRanges", setB="GRanges"),
     function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
-             maxDiff=74, mc.cores=1) {
+             maxDiff=74, minDiff=10, mc.cores=1) {
         sets <- list(setA, setB)
 
         splitted <- lapply(
@@ -68,10 +74,13 @@ setMethod(
                 message(paste("Starting", chr))
 
                 dyn <- .nucleosomeDynamics(
-                    mySets=lapply(splitted,
-                                  function(x) ranges(x[[chr]])),
-                    maxLen=maxLen, roundPow=roundPow, equalSize=equalSize,
-                    readSize=readSize, maxDiff=maxDiff
+                    mySets=lapply(splitted, function(x) ranges(x[[chr]])),
+                    maxLen=maxLen,
+                    roundPow=roundPow,
+                    equalSize=equalSize,
+                    readSize=readSize,
+                    maxDiff=maxDiff,
+                    minDiff=minDiff
                 )
 
                 message(paste(chr, "done"))
@@ -99,13 +108,13 @@ setMethod(
 {  # Build a GRangesList for a given set
 
     if (equalSize) {
-        readTypes <- c("originals", "coinciding", "left.shifts",
-                       "right.shifts", "indels", "unpaired")
-    } else {
-        readTypes <- c("originals", "coinciding", "same.start",
-                       "same.end", "containedA", "containedB",
+        readTypes <- c("originals", "coinciding", "small.shifts",
                        "left.shifts", "right.shifts", "indels",
                        "unpaired")
+    } else {
+        readTypes <- c("originals", "coinciding", "same.start", "same.end",
+                       "containedA", "containedB", "small.shifts",
+                       "left.shifts", "right.shifts", "indels", "unpaired")
     }
 
     setLs <- lapply(dyn, function(x) lapply(x, function(y) y[[i]]))
@@ -125,11 +134,11 @@ setMethod(
         }
     }
 
-    grLs[readTypes]  # keep them in the wanter order
+    grLs[readTypes]  # keep them in the wanted order
 }
 
 .nucleosomeDynamics <- function(mySets, maxLen=170, roundPow=5, equalSize,
-                                readSize=140, maxDiff=74, saveit=FALSE)
+                                readSize=140, maxDiff=74, minDiff=10)
 {
     mySets <- lapply(mySets, .toIRanges)
     #originals <- mySets
@@ -196,9 +205,19 @@ setMethod(
 
     }
 
-    newSets <- .shifts(mySets, dist=maxDiff)
-    leftShiftReads <- newSets$left
-    rightShiftReads <- newSets$right
+    newSets <- .shifts(mySets, max.dist=maxDiff, min.dist=0)
+
+    postLeft <- .applyDistThresh(newSets$left, minDiff)
+    postRight <- .applyDistThresh(newSets$right, minDiff)
+
+    smallShiftReads <- mapply(c,
+                              postLeft$smallShifts,
+                              postRight$smallShifts,
+                              SIMPLIFY=FALSE)
+
+    leftShiftReads <- postLeft$properShifts
+    rightShiftReads <- postRight$properShifts
+
     mySets <- newSets$rest
 
     #equalNumbered <- .normSize(mySets)
@@ -209,6 +228,7 @@ setMethod(
     if (equalSize) {
         returnLs <- list(originals    = originals,
                          coinciding   = equalReads,
+                         small.shifts = smallShiftReads,
                          left.shifts  = leftShiftReads,
                          right.shifts = rightShiftReads,
                          indels       = mySets,
@@ -220,6 +240,7 @@ setMethod(
                          same.end     = sameEndReads,
                          containedA   = containedReadsA,
                          containedB   = containedReadsB,
+                         small.shifts = smallShiftReads,
                          left.shifts  = leftShiftReads,
                          right.shifts = rightShiftReads,
                          indels       = mySets,

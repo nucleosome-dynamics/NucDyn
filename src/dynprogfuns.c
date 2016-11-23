@@ -8,12 +8,22 @@
 const int GAP = -10000;
 const double MAX_SCORE = 100;
 
-double get_score (int distance, int max_dist)
+double get_score (int distance, int max_dist, int min_dist)
 {
-    if (distance > max_dist) {
+    int dist_range;
+    int dist_diff;
+    double scale;
+
+    if (distance > max_dist || distance < min_dist) {
         return -INFINITY;
     } else {
-        return MAX_SCORE - distance * MAX_SCORE / max_dist;
+        // score goes from MAX_SCORE (for distance=min_dist)
+        // to 0 (for distnace=max_dist)
+        dist_range = max_dist - min_dist;
+        dist_diff = distance - min_dist;
+        scale = MAX_SCORE / dist_range;
+
+        return MAX_SCORE - dist_diff * scale;
     }
 }
 
@@ -43,7 +53,7 @@ void init_table (int **S, int m, int n)
     }
 }
 
-void fill_table (int **S, int max_dist,
+void fill_table (int **S, int max_dist, int min_dist,
                  int *xs, int m, int *ys, int n)
 {
     int i, j;
@@ -54,7 +64,7 @@ void fill_table (int **S, int max_dist,
     for (i=1; i<m+1; i++) {
         for (j=1; j<n+1; j++) {
             d = abs(xs[i-1] - ys[j-1]);
-            s = get_score(abs(d), max_dist);
+            s = get_score(abs(d), max_dist, min_dist);
 
             a = S[i-1][j-1] + (int) round(s);
             b = S[i-1][j] + GAP;
@@ -71,7 +81,7 @@ void fill_table (int **S, int max_dist,
     }
 }
 
-void traceback (int **S, int max_dist,
+void traceback (int **S, int max_dist, int min_dist,
                 int *xs, int *x_l, int *x_r, int m,
                 int *ys, int *y_l, int *y_r, int n)
 {
@@ -90,7 +100,7 @@ void traceback (int **S, int max_dist,
 
     while (i != 0 && j != 0) {
         d = ys[j-1] - xs[i-1];
-        s = get_score(abs(d), max_dist);
+        s = get_score(abs(d), max_dist, min_dist);
 
         a = S[i-1][j-1] + (int) round(s);
         b = S[i-1][j] + GAP;

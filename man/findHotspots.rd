@@ -1,14 +1,18 @@
 \name{findHotspots}
 \alias{findHotspots}
 \alias{findHotspots,NucDyn-method}
+\alias{combiner}
 \title{
     Find hotspots in a NucDyn object.
 }
 \description{
     Find hotspots from a given nucleosome dynamics.
+    Combiner combines hotspots from a call to findHotspots where combined was
+    FALSE.
 }
 \usage{
-    \S4method{findHotspots}{NucDyn}(dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold=NULL, mc.cores=1)
+    \S4method{findHotspots}{NucDyn}(dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold=NULL, filtering=identity, mc.cores=1)
+    combiner(hs, nuc.width, same.magnitude, mc.cores=1)
 }
 \arguments{
     \item{dyn}{
@@ -42,6 +46,13 @@
         \code{character} value giving a relative coverage percentile or
         \code{numeric} value giving an absolute threshold. Hotspots with less
         than this number of reads will be discarded.
+    }
+    \item{filtering}{
+        Function used to smoothe and filter the coverages of moved reads. By
+        default, no smoothing is performed.
+    }
+    \item{hs}{
+        Hotspots data.frame to be combined.
     }
     \item{mc.cores}{
         If \code{parallel} support, the number of cores available. This option

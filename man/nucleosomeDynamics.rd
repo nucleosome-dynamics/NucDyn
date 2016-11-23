@@ -11,9 +11,9 @@
     reads of two NGS experiments of nucleosome coverage.
 }
 \usage{
-    \S4method{nucleosomeDynamics}{IRanges,IRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74)
-    \S4method{nucleosomeDynamics}{GRanges,GRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
-    \S4method{nucleosomeDynamics}{RangedData,RangedData}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, mc.cores=1)
+    \S4method{nucleosomeDynamics}{IRanges,IRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, minDiff=10)
+    \S4method{nucleosomeDynamics}{GRanges,GRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, minDiff=10, mc.cores=1)
+    \S4method{nucleosomeDynamics}{RangedData,RangedData}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, minDiff=10, mc.cores=1)
 }
 \arguments{
     \item{setA}{
@@ -45,6 +45,10 @@
     }
     \item{maxDiff}{
         Maximum distance between the dyads of two reads that allows them to
+        still be considered a "shift".
+    }
+    \item{minDiff}{
+        Minimum distance between the dyads of two reads that allows them to
         still be considered a "shift".
     }
     \item{mc.cores}{

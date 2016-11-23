@@ -1,4 +1,4 @@
-.doShifts <- function(sets, maxDiff)
+.doShifts <- function(sets, max.dist, min.dist)
 {
     preciseDyadPos <- function(set)
         as.integer(((start(set) + end(set)) / 2) * 10)
@@ -13,12 +13,13 @@
     yRight <- yLeft
     xRight <- xLeft
 
-    diff <- as.integer(maxDiff * 10)
+    maxDiff <- as.integer(max.dist * 10)
+    minDiff <- as.integer(min.dist * 10)
 
     cOut <- .C("shifts",
                xDyad, xSize, yDyad, ySize,
                xLeft=xLeft, yLeft=yLeft, xRight=xRight, yRight=yRight,
-               diff)
+               maxDiff, minDiff)
 
     return(list(left=list(cOut$xLeft, cOut$yLeft),
                 right=list(cOut$xRight, cOut$yRight)))
@@ -105,7 +106,7 @@
     lapply(dyads, `[`, pos)
 }
 
-.doZone <- function(i, bigzones, smallzones, sets, dist)
+.doZone <- function(i, bigzones, smallzones, sets, max.dist, min.dist)
 {
     f <- function(a, xs)
         end(a) > start(xs) & start(a) < end(xs)
@@ -113,7 +114,7 @@
     sub.rans <- lapply(sets,
                        function(s) s[f(s, bigzones[i])])
 
-    shs <- .doShifts(sub.rans, dist)
+    shs <- .doShifts(sub.rans, max.dist, min.dist)
 
     absolute.pairs <- lapply(shs,
                              .absPos,
@@ -148,7 +149,7 @@
     return(joined)
 }
 
-.shifts <- function(sets, win.size=10000, dist=74)
+.shifts <- function(sets, win.size=10000, max.dist=74, min.dist=10)
 {
     sets.range <- range(do.call(`c`, sets))
 
@@ -174,7 +175,13 @@
     zone <- c(zone.a, zone.b)
     subzone <- c(a.shrinked, b.shrinked)
 
-    by.zones <- lapply(seq_along(zone), .doZone, zone, subzone, sets, dist)
+    by.zones <- lapply(seq_along(zone),
+                       .doZone,
+                       zone,
+                       subzone,
+                       sets,
+                       max.dist,
+                       min.dist)
 
     idxs <- .joinZones(by.zones,
                        c("left", "right"),
@@ -194,4 +201,16 @@
     return(list(left=left.shifts,
                 right=right.shifts,
                 rest=rest))
+}
+
+.applyDistThresh <- function (rs, minDiff=10) {
+    ds <- lapply(rs, .dyadPos)
+    diffs <- abs(do.call(`-`, ds))
+    sel <- diffs >= minDiff
+
+    pos.sel <- lapply(rs, `[`,  sel)
+    neg.sel <- lapply(rs, `[`, !sel)
+
+    list(properShifts=pos.sel,
+         smallShifts=neg.sel)
 }
