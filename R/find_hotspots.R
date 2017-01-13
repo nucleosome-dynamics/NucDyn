@@ -103,6 +103,25 @@
            MoreArgs=list(xs))
 }
 
+.areaFromRanges <- function (ran, xs)
+    .getAreas(start(ran), end(ran), xs)
+
+.getPeakDf <- function (x, n, diff, originals.cov) {
+    filtered <- filterFFT(x, pcKeepComp=0.01, useOptim=TRUE)
+    rans <- .getHsRanges(filtered)
+    coord <- .peaksFromRanges(filtered, rans)
+    changedArea <- .areaFromRanges(rans, diff)
+    involvedArea <- .areaFromRanges(rans, originals.cov)
+    data.frame(coord        = coord,
+               nreads       = round(filtered[coord]),
+               start        = start(rans),
+               end          = end(rans),
+               type         = n,
+               changedArea  = changedArea,
+               involvedArea = involvedArea,
+               score        = changedArea / involvedArea)
+}
+
 .peakCoupledParams <- function (ranA, ranB, originals.cov, range, names, filtering=identity)
 {   # Given two ranged data of reads that are coupled (ex: left and right
     # shifts, inserts and evictions), return the peaks and their scores
@@ -112,28 +131,12 @@
     covs <- do.call(.makeVectsEqual, lapply(rans, coverage))
     diff <- as.vector(covs[[2]] - covs[[1]])
     by.sign <- .splitBySign(diff)
-    filtered <- lapply(by.sign, filtering)
 
-    peak.dfs <- mapply(
-        .handleNulls(function (f, n) {
-            rans <- .getHsRanges(f)
-            coord <- .peaksFromRanges(f, rans)
-            changedArea <- .getAreas(start(rans), end(rans), diff)
-            involvedArea <- .getAreas(start(rans), end(rans), originals.cov)
-
-            data.frame(coord        = coord,
-                       nreads       = round(f[coord]),
-                       start        = start(rans),
-                       end          = end(rans),
-                       type         = n,
-                       changedArea  = changedArea,
-                       involvedArea = involvedArea,
-                       score        = changedArea / involvedArea)
-        }),
-        filtered,
-        as.list(names),
-        SIMPLIFY=FALSE
-    )
+    peak.dfs <- mapply(.handleNulls(.getPeakDf),
+                       by.sign,
+                       as.list(names),
+                       MoreArgs=list(diff, originals.cov),
+                       SIMPLIFY=FALSE)
 
     df <- do.call(rbind, peak.dfs)
 
@@ -161,118 +164,67 @@
          ref[getReorderer(y)])
 }
 
+.vectorCov <- function (x)
+    as.vector(coverage(x))
+
+.buildScoredDf <- function (filt, orig, name, diff, norm.diff) {
+    rans <- .getHsRanges(filt)
+    if (length(rans) > 0) {
+        coord <- .peaksFromRanges(filt, rans)
+        changedArea.norm <- .areaFromRanges(rans, norm.diff)
+        changedArea <- .areaFromRanges(rans, diff)
+        norm.ratio <- changedArea.norm / changedArea
+        involvedArea <- .areaFromRanges(rans, orig)
+        involvedArea.norm <- involvedArea * norm.ratio
+        df <- data.frame(coord        = coord,
+                         nreads       = round(filt[coord]),
+                         start        = start(rans),
+                         end          = end(rans),
+                         changedArea  = changedArea.norm,
+                         involvedArea = involvedArea.norm,
+                         score        = changedArea.norm / involvedArea.norm,
+                         type         = name)
+        return(df[!is.na(df$score) & df$score >= 0 & df$score <= 1, ])
+    } else {
+        return(data.frame(coord        = numeric(),
+                          nreads       = numeric(),
+                          start        = numeric(),
+                          end          = numeric(),
+                          changedArea  = numeric(),
+                          involvedArea = numeric(),
+                          score        = numeric(),
+                          type         = character()))
+    }
+}
+
+.getEqCovs <- function (xs)
+    do.call(.makeVectsEqual,
+            lapply(xs,
+                   function (x)
+                       as.vector(coverage(x))))
+
 .indelPeaks <- function(dyn, range)
 {
-    reads <- lapply(dyn$originals,
-                    function(x) .subsetReads(unique(.rmLongReads(x,
-                                                                 174)),
-                                             range=range))
+    rs <- lapply(dyn$indels, .subsetReads, range=range)
+    original.reads <- lapply(dyn$originals, .subsetReads, range=range)
 
-    covs <- lapply(reads, coverage)
+    original.covs <- .getEqCovs(original.reads)
+    covs <- .getEqCovs(rs)
 
-    norm.covs <- do.call(.quantileNormalize,
-                         lapply(do.call(.makeVectsEqual,
-                                        covs),
-                                as.vector))
+    norm.covs <- do.call(.quantileNormalize, covs)
+    diff <- covs[[2]] - covs[[1]]
+    norm.diff <- norm.covs[[2]] - norm.covs[[1]]
+    by.sign <- .splitBySign(norm.diff)
+    filtered <- lapply(by.sign, filterFFT, pcKeepCom=0.01, useOptim=TRUE)
 
-    filtered <- lapply(norm.covs,
-                       filterFFT,
-                       pcKeepComp=0.01,
-                       useOptim=TRUE)
+    dfs <- mapply(.buildScoredDf,
+                  filtered,
+                  original.covs,
+                  list("EVICTION", "INCLUSION"),
+                  MoreArgs=list(diff, norm.diff),
+                  SIMPLIFY=FALSE)
 
-    diff <- do.call(`-`, filtered)
-
-    insert.prof <- diff
-    insert.prof[insert.prof > 0] <- 0
-    insert.prof <- -insert.prof
-    delete.prof <- diff
-    delete.prof[delete.prof < 0] <- 0
-
-    set.range <- .getHsRanges(abs(diff))
-
-    #ips <- peakDetection(insert.prof, threshold=0, score=FALSE)
-    #ips <- data.frame(peak=ips, score=insert.prof[ips])
-
-    #dps <- peakDetection(delete.prof, threshold=0, score=FALSE)
-    #dps <- data.frame(peak=dps, score=delete.prof[dps])
-
-    #idxs <- .whichRan(ips$peak, set.range)
-    #ips <- ips[as.logical(idxs), ]
-    #rs <- set.range[idxs]
-    #ips$start <- start(rs)
-    #ips$end <- end(rs)
-
-    #idxs <- .whichRan(dps$peak, set.range)
-    #dps <- dps[as.logical(idxs), ]
-    #rs <- set.range[idxs]
-    #dps$start <- start(rs)
-    #dps$end <- end(rs)
-
-    #if (nrow(ips)) {
-    #    ips$type <- "INCLUSION"
-    #} else {
-    #    ips$type <- character(0)
-    #}
-    #if (nrow(dps)) {
-    #    dps$type <- "EVICTION"
-    #} else {
-    #    ips$type <- character(0)
-    #}
-
-    #df <- rbind(ips, dps)
-    #sorted.df <- df[order(df$peak), ]
-
-    #return(with(sorted.df,
-    #            data.frame(coord  = peak,
-    #                       type   = type,
-    #                       nreads = round(score),
-    #                       start  = start,
-    #                       end    = end)))
-
-    ips <- data.frame(coord=peakDetection(insert.prof,
-                                          threshold = 0,
-                                          score     = FALSE))
-    dps <- data.frame(coord=peakDetection(delete.prof,
-                                          threshold = 0,
-                                          score     = FALSE))
-
-    ips$nreads <- round(insert.prof[ips$coord])
-    dps$nreads <- round(delete.prof[dps$coord])
-
-    idxs <- .whichRan(ips$coord, set.range)
-    ips <- ips[as.logical(idxs), , drop=FALSE]
-    rs <- set.range[idxs]
-    ips$start <- start(rs)
-    ips$end <- end(rs)
-
-    idxs <- .whichRan(dps$coord, set.range)
-    dps <- dps[as.logical(idxs), , drop=FALSE]
-    rs <- set.range[idxs]
-    dps$start <- start(rs)
-    dps$end <- end(rs)
-
-    ips$changedArea <- .getAreas(ips$start, ips$end, insert.prof)
-    ips$involvedArea <- .getAreas(ips$start, ips$end, filtered[[2]])
-
-    dps$changedArea <- .getAreas(dps$start, dps$end, delete.prof)
-    dps$involvedArea <- .getAreas(dps$start, dps$end, filtered[[1]])
-
-    if (nrow(ips)) {
-        ips$type <- "INCLUSION"
-        ips$score <- ips$changedArea / ips$involvedArea
-    } else {
-        ips$type <- character(0)
-        ips$score <- numeric(0)
-    }
-    if (nrow(dps)) {
-        dps$type <- "EVICTION"
-        dps$score <- dps$changedArea / dps$involvedArea
-    } else {
-        dps$type <- character(0)
-        dps$score <- numeric(0)
-    }
-
-    df <- rbind(ips, dps)
+    df <- do.call(rbind, dfs)
     return(df[order(df$coord), ])
 }
 

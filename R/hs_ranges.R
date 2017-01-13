@@ -64,13 +64,18 @@
     }
 
     extraIsland.lims <- .getIslandLims(xs)
-    intraIsland.lims <- unlist(.selfZip(extraIsland.lims, doRange, xs))
+    intraIsland.lims <- unlist(.selfZip(c(1, extraIsland.lims), doRange, xs))
 
     sort(unique(c(extraIsland.lims, intraIsland.lims)))
 }
 
-.lims2range <- function (lims)
-    IRanges(start=c(1, lims[-length(lims)] + 2), end=lims)
+.lims2range <- function (lims) {
+    if (length(lims) > 0) {
+        IRanges(start=c(1, lims[-length(lims)] + 2), end=lims)
+    } else {
+        IRanges()
+    }
+}
 
 .peaksFromRanges <- function (xs, rans) {
     doRange <- function (start, end, xs) {

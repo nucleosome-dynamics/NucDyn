@@ -152,7 +152,7 @@ setMethod(
         #mySets <- lapply(mySets, function(x) .rmLongReads(x, maxLen=maxLen))
 
         mySets <- lapply(mySets, .setSizeTo, readSize=readSize)
-        mySets <- lapply(mySets, IRanges::unique)
+        #mySets <- lapply(mySets, IRanges::unique)
         mySets <- lapply(mySets, sort)  # keep them sorted
 
         originals <- mySets
@@ -166,7 +166,7 @@ setMethod(
     } else {
         # round the reads to powers of 5
         mySets <- lapply(mySets, .setRounder, pow=roundPow)
-        mySets <- lapply(mySets, IRanges::unique)
+        #mySets <- lapply(mySets, IRanges::unique)
         mySets <- lapply(mySets, sort)  # keep them sorted
 
         originals <- mySets
