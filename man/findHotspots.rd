@@ -1,7 +1,6 @@
 \name{findHotspots}
 \alias{findHotspots}
 \alias{findHotspots,NucDyn-method}
-\alias{combiner}
 \title{
     Find hotspots in a NucDyn object.
 }
@@ -10,49 +9,16 @@
     Combiner combines hotspots from a call to findHotspots where combined was
     FALSE.
 }
-\usage{
-    \S4method{findHotspots}{NucDyn}(dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE, same.magnitude=2, threshold=NULL, filtering=identity, mc.cores=1)
-    combiner(hs, nuc.width, same.magnitude, mc.cores=1)
-}
 \arguments{
     \item{dyn}{
-        \code{NucDyn} object with the dynamic to analyze.
+        NucDyn object with the dynamic to analyze.
     }
-    \item{range}{
-        Range from the \code{NucDyn} object to analyze. If not specified, the
-        whole set will be analyzed.
+    \item{indel.threshold}{
+        Maximum p-value for an insertion or delition hotspot to be considered
+        significant.
     }
-    \item{chr}{
-        Chromosome from the \code{NucDyn} object to analyze. If not specified,
-        all chromosomes will be analyzed.
-    }
-    \item{nuc.width}{
-        Nucleosome width considered.
-    }
-    \item{combined}{
-        If \code{TRUE}, nearby hotspots will be combined (see details for
-        possible combinations). Otherwise, all the information about detected
-        shifts and changes in coverage will be returnes without further
-        processing.
-    }
-    \item{same.magnitude}{
-        Only used if \code{combined=TRUE}. When combining two hotspots, this
-        value is the maximum ratio between two spots to be considered with the
-        same magnitude. Two hot spots with the same magnitude can be combined,
-        but a large hotspot will not be merged with a much smaller one. See
-        details.
-    }
-    \item{threshold}{
-        \code{character} value giving a relative coverage percentile or
-        \code{numeric} value giving an absolute threshold. Hotspots with less
-        than this number of reads will be discarded.
-    }
-    \item{filtering}{
-        Function used to smoothe and filter the coverages of moved reads. By
-        default, no smoothing is performed.
-    }
-    \item{hs}{
-        Hotspots data.frame to be combined.
+    \item{shift.threshold}{
+        Maximum p-value for shift hotspot to be considered significant.
     }
     \item{mc.cores}{
         If \code{parallel} support, the number of cores available. This option

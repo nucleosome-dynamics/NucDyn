@@ -7,7 +7,7 @@ importFrom(nucleR, coverage.rpm)
 importMethodsFrom(nucleR, filterFFT, peakDetection)
 
 importFrom(parallel, mclapply, makeCluster, stopCluster)
-importFrom(plyr, ddply, dlply)
+importFrom(plyr, ddply, dlply, rbind.fill)
 importFrom(doParallel, registerDoParallel)
 
 importMethodsFrom(IRanges, as.vector, sort, coverage, disjointBins, unlist,
@@ -21,5 +21,4 @@ importMethodsFrom(GenomicRanges, seqnames)
 importFrom(GenomicRanges, GRanges)
 
 useDynLib(NucDyn)
-export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b, combiner,
-       getVariableThreshold, applyThreshold, variableThreshFromHss)
+export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b)

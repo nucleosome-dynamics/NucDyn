@@ -166,4 +166,3 @@
     return (list(left=list(cOut$xLeft, cOut$yLeft),
                  right=list(cOut$xRight, cOut$yRight)))
 }
-

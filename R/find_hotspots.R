@@ -1,31 +1,37 @@
-.subsetReads <- function (reads, range)
-{  # Given a ranged data of reads and a range in the chormosome,
-   # return the read subset in that range
-    subset <- start(reads) >= range[[1]] & end(reads) <= range[[2]]
-    subRange <- reads[subset]
-    return(subRange)
+.getPVals <- function (x, y) {
+    xs <- as.integer(x)
+    ys <- as.integer(y)
+    n <- as.integer(length(xs))
+    out <- as.numeric(rep(0, n))
+    cOut <- .C("get_pvals", xs, ys, n, out=out)
+    return(cOut$out)
 }
 
-.subsetCover <- function (reads, range)
-{  # Given a ranged data of reads and a range in the chromosome,
-   # return the coverage of the reads in that range
-    width <- length(range[1]:range[2])
-    subRange <- .subsetReads(reads, range)
-    cov <- coverage(subRange, shift=(-range[1]), width=width)
-    return(as.numeric(cov))
+.calcDiff <- function (x, y) {
+    X <- sum(x)
+    Y <- sum(y)
+
+    N <- X + Y
+    n <- x + y
+
+    E <- n * (X/N)
+    V <- E * (Y/N) * ((N-n)/(N-1))
+
+    z <- (x-E) / sqrt(V)
+    z[is.nan(z)] <- 0
+    z
 }
 
-.splitBySign <- function (xs)
-{
+.splitBySign <- function (xs) {
     # Convert a numeric vector into a list of two numeric vectors.
     # The first one will have the originaly positive numbers set to zero and
     # the second one, the originaly negative ones.
     a.prof <- xs
-    a.prof[a.prof > 0] <- 0
-    a.prof <- abs(a.prof)
+    a.prof[a.prof < 0] <- 0
 
     b.prof <- xs
-    b.prof[b.prof < 0] <- 0
+    b.prof[b.prof > 0] <- 0
+    b.prof <- abs(b.prof)
 
     list(a=a.prof, b=b.prof)
 }
@@ -38,50 +44,8 @@
         NULL
     })
 
-.sumWithNulls <- function (x, y)
-{   # Sum two vectors and handle appropriately if one of them is NULL
-    xcheck <- !is.null(x)
-    ycheck <- !is.null(y)
-
-    if (xcheck && ycheck) {
-        x + y
-    } else if (xcheck && !ycheck) {
-        x
-    } else if (!xcheck && ycheck) {
-        y
-    } else {
-        NULL
-    }
-}
-
-.handleNulls <- function(f)
-    # Higer order function to properly handle NULL inputs
-    function(x, ...)
-        if (is.null(x) || (class(x) == "data.frame" && nrow(x) == 0)) {
-            NULL
-        } else {
-            f(x, ...)
-        }
-
-.whichRan <- function(xs, r)
-{   # Given a vector of positions and an IRange, return in which range each
-    # position is found. Implemented in C.
-
-    xs <- as.integer(xs)
-    starts <- as.integer(start(r))
-    ends <- as.integer(end(r))
-    n <- as.integer(length(xs))
-    m <- as.integer(length(r))
-    out <- .initEmptyVect(n)
-
-    cOut <- .C("which_ran", xs, n, starts, ends, m, out=out)$out
-
-    #return(r[cOut])
-    return(cOut)
-}
-
-.makeVectsEqual <- function(x, y)
-{   # Make two numerical vectors the same size by appending zeros to the
+.makeVectsEqual <- function(x, y) {
+    # Make two numerical vectors the same size by appending zeros to the
     # shorter one
     vs <- list(x, y)
     lens <- sapply(vs, length)
@@ -91,478 +55,70 @@
     return(vs)
 }
 
-.buildDf <- .handleNulls(function(p, f)
-    data.frame(coord=p, nreads=round(f[p])))
-
-.getAreas <- function (from, to, xs) {
-    areaRange <- function (from, to, xs)
-        sum(abs(xs[from:to]))
-    mapply(areaRange,
-           from,
-           to,
-           MoreArgs=list(xs))
-}
-
-.areaFromRanges <- function (ran, xs)
-    .getAreas(start(ran), end(ran), xs)
-
-.getPeakDf <- function (x, n, diff, originals.cov) {
-    filtered <- filterFFT(x, pcKeepComp=0.01, useOptim=TRUE)
-    rans <- .getHsRanges(filtered)
-    coord <- .peaksFromRanges(filtered, rans)
-    changedArea <- .areaFromRanges(rans, diff)
-    involvedArea <- .areaFromRanges(rans, originals.cov)
-    data.frame(coord        = coord,
-               nreads       = round(filtered[coord]),
-               start        = start(rans),
-               end          = end(rans),
-               type         = n,
-               changedArea  = changedArea,
-               involvedArea = involvedArea,
-               score        = changedArea / involvedArea)
-}
-
-.peakCoupledParams <- function (ranA, ranB, originals.cov, range, names, filtering=identity)
-{   # Given two ranged data of reads that are coupled (ex: left and right
-    # shifts, inserts and evictions), return the peaks and their scores
-
-    rans <- lapply(list(ranA, ranB), .subsetReads, range)
-
-    covs <- do.call(.makeVectsEqual, lapply(rans, coverage))
-    diff <- as.vector(covs[[2]] - covs[[1]])
-    by.sign <- .splitBySign(diff)
-
-    peak.dfs <- mapply(.handleNulls(.getPeakDf),
-                       by.sign,
-                       as.list(names),
-                       MoreArgs=list(diff, originals.cov),
-                       SIMPLIFY=FALSE)
-
-    df <- do.call(rbind, peak.dfs)
-
-    if (is.null(df) || nrow(df) == 0) {
-        return(data.frame(chrom        = numeric(0),
-                          coord        = numeric(0),
-                          type         = character(0),
-                          nreads       = numeric(0),
-                          start        = numeric(0),
-                          end          = numeric(0),
-                          score        = numeric(0),
-                          changedArea  = numeric(0),
-                          invovledArea = numeric(0)))
-    } else {
-        return(df[order(df$coord), ])
-    }
-}
-
-.quantileNormalize <- function(x, y)
-{
-    getReorderer <- function(x)
-        order(c(1:length(x))[order(x)])
-    ref <- sort((x + y) / 2)
-    list(ref[getReorderer(x)],
-         ref[getReorderer(y)])
-}
-
-.vectorCov <- function (x)
-    as.vector(coverage(x))
-
-.buildScoredDf <- function (filt, orig, name, diff, norm.diff) {
-    rans <- .getHsRanges(filt)
-    if (length(rans) > 0) {
-        coord <- .peaksFromRanges(filt, rans)
-        changedArea.norm <- .areaFromRanges(rans, norm.diff)
-        changedArea <- .areaFromRanges(rans, diff)
-        norm.ratio <- changedArea.norm / changedArea
-        involvedArea <- .areaFromRanges(rans, orig)
-        involvedArea.norm <- involvedArea * norm.ratio
-        df <- data.frame(coord        = coord,
-                         nreads       = round(filt[coord]),
-                         start        = start(rans),
-                         end          = end(rans),
-                         changedArea  = changedArea.norm,
-                         involvedArea = involvedArea.norm,
-                         score        = changedArea.norm / involvedArea.norm,
-                         type         = name)
-        return(df[!is.na(df$score) & df$score >= 0 & df$score <= 1, ])
-    } else {
-        return(data.frame(coord        = numeric(),
-                          nreads       = numeric(),
-                          start        = numeric(),
-                          end          = numeric(),
-                          changedArea  = numeric(),
-                          involvedArea = numeric(),
-                          score        = numeric(),
-                          type         = character()))
-    }
-}
-
 .getEqCovs <- function (xs)
+    do.call(.makeVectsEqual, lapply(xs, function (x) as.vector(coverage(x))))
+
+.ranScorer <- function (start, end, xs)
+    mapply(function (s, e) abs(xs[s:e]), start, end)
+
+.ran2df <- function (r, xs, pval)
+    data.frame(start  = start(r),
+               end    = end(r),
+               nreads = sapply(.ranScorer(start(r), end(r), xs), max),
+               score  = sapply(.ranScorer(start(r), end(r), pval), mean))
+
+.hsFromCov <- function(x, pvals, names) {
+    by.sign <- .splitBySign(x)
+    filtered <- lapply(by.sign, filterFFT, pcKeepComp=0.01, useOptim=TRUE)
+    rans <- lapply(filtered, .getHsRanges)
+    dfs <- lapply(rans, .ran2df, x, pvals)
+    for (i in seq_along(dfs)) {
+        dfs[[i]][["type"]] <- names[[i]]
+    }
+    rbind.fill(dfs)
+}
+
+.getEqualCovs <- function (xs)
     do.call(.makeVectsEqual,
             lapply(xs,
                    function (x)
                        as.vector(coverage(x))))
 
-.indelPeaks <- function(dyn, range)
+.findInRange <- function (dyn)
 {
-    rs <- lapply(dyn$indels, .subsetReads, range=range)
-    original.reads <- lapply(dyn$originals, .subsetReads, range=range)
+    full.covs <- .getEqualCovs(dyn$originals)
+    pvals <- do.call(.getPVals, full.covs)
 
-    original.covs <- .getEqCovs(original.reads)
-    covs <- .getEqCovs(rs)
+    ###########################################################################
 
-    norm.covs <- do.call(.quantileNormalize, covs)
-    diff <- covs[[2]] - covs[[1]]
-    norm.diff <- norm.covs[[2]] - norm.covs[[1]]
-    by.sign <- .splitBySign(norm.diff)
-    filtered <- lapply(by.sign, filterFFT, pcKeepCom=0.01, useOptim=TRUE)
+    z <- do.call(.calcDiff, full.covs)
+    indels <- .hsFromCov(z, pvals, c("EVICTION", "INCLUSION"))
 
-    dfs <- mapply(.buildScoredDf,
-                  filtered,
-                  original.covs,
-                  list("EVICTION", "INCLUSION"),
-                  MoreArgs=list(diff, norm.diff),
-                  SIMPLIFY=FALSE)
+    ###########################################################################
 
-    df <- do.call(rbind, dfs)
-    return(df[order(df$coord), ])
+    covs <- .getEqualCovs(list(dyn[["right.shifts"]][[1]],
+                               dyn[["left.shifts"]][[1]]))
+    diff <- do.call(`-`, covs)
+    shifts <- .hsFromCov(diff, pvals, c("SHIFT +", "SHIFT -"))
+
+    ###########################################################################
+
+    hs <- rbind(indels, shifts)
+    hs[order(hs$start), ]
 }
 
-.typeNamer <- function(typeA, typeB, mergeKind)
-{
-    if (mergeKind == "shift-shift") {
-        if (typeA == "SHIFT -" && typeB == "SHIFT +") {
-            return("DISPERSION")
-        } else if (typeA == "SHIFT +" && typeB == "SHIFT -") {
-            return("CONCENTRATION")
-        } else {
-            return(NULL)
-        }
-
-    } else if (mergeKind == "shift-shift_again") {
-        if (typeA == "OPENING -" && typeB == "OPENING +") {
-            return("OPENING <>")
-        } else if (typeA == "CLOSING +" && typeB == "CLOSING -") {
-            return("CLOSING <>")
-        } else {
-            return(NULL)
-        }
-
-    } else if (mergeKind == "shift-indel") {
-        forbidden <- ((typeA == "DISPERTION"    && typeB == "INCLUSION") ||
-                      (typeA == "CONCENTRATION" && typeB == "EVICTION"))
-        if (forbidden) {
-            return(NULL)
-        }
-
-        if (typeA == "DISPERTION" || typeA == "CONCENTRATION") {
-            direction <- "<>"
-        } else if (typeA == "SHIFT +") {
-            direction <- "+"
-        } else if (typeB == "SHIFT -") {
-            direction <- "-"
-        } else {
-            return(NULL)
-        }
-
-        if (typeB == "EVICTION") {
-            kind <- "OPENING"
-        } else if (typeB == "INCLUSION") {
-            kind <- "CLOSING"
-        } else {
-            return(NULL)
-        }
-
-        return(paste(kind, direction, sep=" "))
-    }
-}
-
-.whichPeak <- function(pos, peaks)
-{
-    # Given a coordinate and an IRanges of peaks, return to which peak the
-    # coordinate belongs.
-    # Return 0 if the coordinate belongs to no peak or to more than one peak.
-    n <- which(start(peaks) <= pos &
-               end(peaks) >= pos)
-    if (length(n) == 1) {
-        n
-    } else {
-        0
-    }
-}
-
-.merger <- function(overlap, peaksA, peaksB, mergeKind, same.magnitude)
-{   # Function that returns which new peak to create and which ones
-    # to delete after a merge. Used in an lapply in mergeShifts and
-    # in mergeShiftsIndels
-
-    h1 <- queryHits(overlap)
-    h2 <- subjectHits(overlap)
-    e1 <- peaksA[h1, ]
-    e2 <- peaksB[h2, ]
-
-    # in shift mergings, only look at adjacent peaks belonging to the same
-    # nucleosome
-    if (mergeKind == "shift-shift") {
-        not.adjacent <- h2 - h1 != 1  # TRUE if reads are not adjacent
-        different.nuc <- (e1$nuc == 0 ||
-                          e2$nuc == 0 ||
-                          e1$nuc != e2$nuc)
-        if (not.adjacent || different.nuc) {
-            return(NULL)
-        }
-    }
-
-    mergedPair <- rbind(e1, e2)
-
-    # check if same magnitude
-    compNReads <- mergedPair$nreads
-    if (!(0 %in% compNReads) &&
-        (max(compNReads) / min(compNReads) <= same.magnitude)) {
-
-        newType <- .typeNamer(e1$type, e2$type, mergeKind)
-        if (is.null(newType)) {
-            return(NULL)
-        }
-
-        xs <- rep(NA, ncol(mergedPair))
-        names(xs) <- names(mergedPair)
-        newPeak <- as.data.frame(as.list(xs))
-
-        newPeak$coord <- round(mean(mergedPair$coord))
-        newPeak$type <- newType
-        newPeak$nreads <- sum(mergedPair$nreads)
-        newPeak$start <- min(mergedPair$start)
-        newPeak$end <- max(mergedPair$end)
-        newPeak$chr <- unique(mergedPair$chr)
-
-        nucs <- unique(mergedPair$nuc)
-        newPeak$nuc <- ifelse(length(nucs) == 1, nucs, 0)
-
-        newPeak$totalReads <- unique(mergedPair$totalReads)
-        newPeak$freads <- newPeak$nreads / newPeak$totalReads
-        newPeak$readsInvolved <- sum(mergedPair$readsInvolved)
-        newPeak$hreads <- newPeak$nreads / newPeak$readsInvolved
-
-        return(list(a2rm    = h1,
-                    b2rm    = h2,
-                    newPeak = newPeak))
-    } else {
-        return(NULL)
-    }
-}
-
-.seq_lapply <- function (X, FUN, ...)
-    lapply(seq_along(X), function (i) FUN(X[i], ...))
-
-.mergeShifts <- function (shift.peaks, nuc.width, mergeKind="shift-shift",
-                          same.magnitude)
-{   # Merge shifts
-    if (nrow(shift.peaks) == 0) {
-        return(shift.peaks)
-    }
-
-    shift.ran <- IRanges(start = shift.peaks$coord - round(nuc.width/2),
-                         width = nuc.width)
-    ovlp <- findOverlaps(shift.ran, ignoreSelf=TRUE, ignoreRedundant=TRUE)
-
-    if (length(ovlp) > 0) {
-        toRmAndAdd <- .seq_lapply(ovlp,
-                                  .merger,
-                                  shift.peaks,
-                                  shift.peaks,
-                                  mergeKind,
-                                  same.magnitude)
-
-        shifts2rm <- unlist(lapply(toRmAndAdd, `[`, c("a2rm", "b2rm")))
-        newPeaks <- do.call("rbind", lapply(toRmAndAdd, `[[`, "newPeak"))
-
-        if (length(shifts2rm) > 0) {
-            shift.peaks <- shift.peaks[-shifts2rm, ]
-            shift.peaks <- rbind(shift.peaks, newPeaks)
-        }
-    }
-    return(shift.peaks)
-}
-
-.mergeShiftsIndels <- function (shift.peaks, indel.peaks, nuc.width,
-                                mergeKind="shift-indel", same.magnitude)
-{  # Merge shifts with indels
-    if (nrow(shift.peaks) > 0 && nrow(indel.peaks) > 0) {
-        shift.ran <- IRanges(start = shift.peaks$coord - round(nuc.width/2),
-                             width = nuc.width)
-        indel.ran <- IRanges(start = indel.peaks$coord - round(nuc.width/2),
-                             width = nuc.width)
-    } else {
-        return(list(shifts=shift.peaks, indels=indel.peaks))
-    }
-
-    ovlp <- findOverlaps(shift.ran, indel.ran)
-
-    if (length(ovlp) > 0) {
-        toRmAndAdd <- .seq_lapply(ovlp,
-                                  .merger,
-                                  shift.peaks,
-                                  indel.peaks,
-                                  mergeKind,
-                                  same.magnitude)
-
-        shift2rm <- unlist(lapply(toRmAndAdd, `[[`, "a2rm"))
-        indel2rm <- unlist(lapply(toRmAndAdd, `[[`, "b2rm"))
-        newPeaks <- do.call("rbind", lapply(toRmAndAdd, `[[`, "newPeak"))
-
-        if (length(shift2rm) > 0) {
-            shift.peaks <- shift.peaks[-shift2rm, ]
-        }
-        shift.peaks <- rbind(shift.peaks, newPeaks)
-        if (length(indel2rm) > 0) {
-            indel.peaks <- indel.peaks[-indel2rm, ]
-        }
-    }
-    return(list(shifts=shift.peaks, indels=indel.peaks))
-}
-
-.combinePeaks <- function(shift.peaks, indel.peaks, nuc.width, same.magnitude)
-{   # Merge peaks
-    # find overlaps of shifts
-    shift.peaks <- .mergeShifts(shift.peaks,
-                                nuc.width=nuc.width,
-                                same.magnitude=same.magnitude)
-
-    # find overlaps between indels and (new) shifts
-    merged <- .mergeShiftsIndels(shift.peaks,
-                                 indel.peaks,
-                                 nuc.width=nuc.width,
-                                 same.magnitude=same.magnitude)
-    shift.peaks <- merged$shifts
-    indel.peaks <- merged$indels
-
-    # another round in the shifts for possible mid-distance combinations
-    shift.peaks <- .mergeShifts(shift.peaks, mergeKind="shift-shift_again",
-                                nuc.width=nuc.width,
-                                same.magnitude=same.magnitude)
-
-    return(list(shifts=shift.peaks, indels=indel.peaks))
-}
-
-.getReadsInvolved <- function(coords, readsA, readsB)
-{
-    myFun <- "reads_involved"
-
-    coords <- as.integer(coords)
-    coordNum <- as.integer(length(coords))
-
-    startsA <- as.integer(start(readsA))
-    endsA <- as.integer(end(readsA))
-    readNumA <- as.integer(length(startsA))
-
-    startsB <- as.integer(start(readsB))
-    endsB <- as.integer(end(readsB))
-    readNumB <- as.integer(length(startsB))
-
-    countOut <- as.double(replicate(coordNum, 0))
-
-    .C(myFun, coords, coordNum,
-       startsA, endsA, readNumA,
-       startsB, endsB, readNumB,
-       out=countOut)$out
-}
-
-.getPeaks <- function(reads, nuc.width)
-{   # to do a nucleosome peak calling
-    cov <- coverage.rpm(RangedData(reads))[[1]]
-    filtered <- filterFFT(cov, pcKeepComp=0.01)
-    peaks <- peakDetection(filtered,
-                           threshold="25%",
-                           score=FALSE,
-                           width=nuc.width)
-}
-
-.countReads <- function (set, range)
-    length(.subsetReads(set, range))
-
-.findInRange <- function (dyn, range, nuc.width=120, filtering=identity)
-{
-    if (is.null(range)) {
-        wholeRange <- range(do.call("c", dyn$originals))
-        range <- sapply(c(start, end), function(f) f(wholeRange))
-    }
-
-    originals.cov <- as.vector(coverage(dyn$originals[[1]]))
-
-    shift.peaks <- .peakCoupledParams(dyn$left.shifts[[1]],
-                                      dyn$right.shifts[[1]],
-                                      originals.cov,
-                                      range,
-                                      c("SHIFT -",
-                                        "SHIFT +"),
-                                      filtering=filtering)
-
-    indel.peaks <- .indelPeaks(dyn, range)
-
-    contained.peaks <- .peakCoupledParams(dyn$containedA[[1]],
-                                          dyn$containedB[[2]],
-                                          originals.cov,
-                                          range,
-                                          c("CONTAINED BinA",
-                                            "CONTAINED AinB"))
-
-    nuc.peaks <- .getPeaks(dyn$originals[[1]], nuc.width=nuc.width)
-
-    all <- rbind(shift.peaks, indel.peaks, contained.peaks)
-    all <- all[order(all$coord), ]
-
-    all$nuc <- sapply(all$coord, .whichPeak, nuc.peaks)
-
-    # Relative number of reads involved in the hotspot
-    if (nrow(all)) {
-        all$totalReads <- mean(sapply(dyn$originals, .countReads, range))
-    } else {
-        all$totalReads <- numeric(0)
-    }
-    all$freads <- all$nreads / all$totalReads
-
-    # Fraction of reads involved in position
-    all$readsInvolved <- .getReadsInvolved(all$coord,
-                                           dyn$originals[[1]],
-                                           dyn$originals[[2]])
-    all$hreads <- all$nreads / all$readsInvolved
-
-    return(all)
-}
-
-.typeSplitter <- function (hs)
-    lapply(list(shifts=function (x) grepl("^SHIFT ", x),
-                indels=function (x) x == "INCLUSION" | x == "EVICTION",
-                contains=function (x) grepl("CONTAINED ", x)),
-           function (f) hs[f(hs$type), ])
-
-combiner <- function (hs, nuc.width, same.magnitude, mc.cores=1)
-{
-    iterFun <- function (chr.hs) {
-        by.types <- .typeSplitter(chr.hs)
-
-        combined <- .combinePeaks(by.types$shifts,
-                                  by.types$indels,
-                                  nuc.width,
-                                  same.magnitude)
-
-        all <- rbind(combined$shifts,
-                     combined$indels,
-                     by.types$contains)
-        all[order(all$coord), ]
-    }
-    res <- .xddply_rep(hs, "chr", iterFun, report=FALSE, mc.cores=mc.cores)
-    rownames(res) <- NULL
-    res
+applyThreshold <- function (hs, indel.thresh, shift.thresh) {
+    is.indel <- hs$type == "EVICTION" | hs$type == "INCLUSION"
+    is.shift <- hs$type == "SHIFT +"  | hs$type == "SHIFT -"
+    sign.indel <- is.indel & hs$score <= indel.thresh
+    sign.shift <- is.shift & hs$score <= indel.thresh
+    hs[sign.indel | sign.shift, ]
 }
 
 setMethod(
     "findHotspots",
     signature(dyn="NucDyn"),
-    function (dyn, range=NULL, chr=NULL, nuc.width=120, combined=TRUE,
-              same.magnitude=2, threshold=NULL, filtering=identity,
-              mc.cores=1) {
+    function (dyn, indel.threshold=NULL, shift.threshold=NULL, mc.cores=1) {
         setA <- set.a(dyn)
         setB <- set.b(dyn)
 
@@ -572,10 +128,7 @@ setMethod(
             message(paste("Starting", chr))
             f <- function(x) ranges(x[seqnames(x) == chr])
             chrDyn <- mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
-            hs <- .findInRange(chrDyn,
-                               range=range,
-                               nuc.width=nuc.width,
-                               filtering=filtering)
+            hs <- .findInRange(chrDyn)
             if (nrow(hs)) {
                 hs$chr <- chr
             }
@@ -584,25 +137,11 @@ setMethod(
             hs
         }
 
-        if (is.null(chr)) {
-            hsLs <- .xlapply(chrs, chrIter, mc.cores=mc.cores)
-            hs <- do.call("rbind", hsLs)
-        } else if (chr %in% chrs) {
-            hs <- chrIter(chr, range=range)
-        } else {
-            stop("chromosome ", chr, " not found")
+        hsLs <- .xlapply(chrs, chrIter, mc.cores=mc.cores)
+        hs <- do.call("rbind", hsLs)
+        if (!is.null(indel.threshold) & !is.null(shift.threshold)) {
+            hs <- applyThreshold(hs, indel.threshold, shift.threshold)
         }
-
-        if (!is.null(threshold)) {
-            message("applying threshold")
-            hs <- applyThreshold(hs, threshold)
-        }
-
-        if (combined) {
-            message("combining hotspots")
-            hs <- combiner(hs, nuc.width, same.magnitude, mc.cores)
-        }
-
         hs
     }
 )
