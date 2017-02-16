@@ -13,6 +13,9 @@
     \item{dyn}{
         NucDyn object with the dynamic to analyze.
     }
+    \item{wins}{
+        Size of the window in base-pairs where the relative scores are computed
+    }
     \item{indel.threshold}{
         Maximum p-value for an insertion or delition hotspot to be considered
         significant.

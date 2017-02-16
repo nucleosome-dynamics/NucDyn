@@ -84,14 +84,23 @@
                    function (x)
                        as.vector(coverage(x))))
 
-.findInRange <- function (dyn)
+.findInRange <- function (dyn, wins=10000)
 {
     full.covs <- .getEqualCovs(dyn$originals)
-    pvals <- do.call(.getPVals, full.covs)
+
+    pvals <- doBySplitting(.getPVals,
+                           wins=wins,
+                           full.covs[[1]],
+                           full.covs[[2]])
+
 
     ###########################################################################
 
-    z <- do.call(.calcDiff, full.covs)
+    z <- doBySplitting(.calcDiff,
+                       wins=wins,
+                       full.covs[[1]],
+                       full.covs[[2]])
+
     indels <- .hsFromCov(z, pvals, c("EVICTION", "INCLUSION"))
 
     ###########################################################################
@@ -118,7 +127,7 @@ applyThreshold <- function (hs, indel.thresh, shift.thresh) {
 setMethod(
     "findHotspots",
     signature(dyn="NucDyn"),
-    function (dyn, indel.threshold=NULL, shift.threshold=NULL, mc.cores=1) {
+    function (dyn, wins=10000, indel.threshold=NULL, shift.threshold=NULL, mc.cores=1) {
         setA <- set.a(dyn)
         setB <- set.b(dyn)
 
@@ -128,7 +137,7 @@ setMethod(
             message(paste("Starting", chr))
             f <- function(x) ranges(x[seqnames(x) == chr])
             chrDyn <- mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
-            hs <- .findInRange(chrDyn)
+            hs <- .findInRange(chrDyn, wins=wins)
             if (nrow(hs)) {
                 hs$chr <- chr
             }
