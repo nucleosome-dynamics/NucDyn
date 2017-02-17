@@ -2,60 +2,70 @@
 #include <stdlib.h>
 #include <math.h>
 
-double fisher(int a,  int b,  int c,  int d) {
-
+double fisher( long a,  long b,  long c,  long d) {
     double N, za, zb, zc, zd;
     double lp;
     long max_c, min_c;
+    long mode;
     double p, z, tza, tzb, tzc, tzd;
     long tc;
 
-    N = (double) (a + b + c + d);
     za = (double) a;
     zb = (double) b;
     zc = (double) c;
     zd = (double) d;
+    N = a + b + c + d;
 
-    lp = lgamma(za + zb + 1.0) + lgamma(za + zc + 1.0) + lgamma(zc + zd + 1.0) + lgamma(zb + zd + 1.0)
-      - lgamma(N + 1.0) - lgamma(za + 1.0) - lgamma(zb + 1.0) - lgamma(zc + 1.0) - lgamma(zd + 1.0);
-
+    mode  = (long) ((zc + zd + 1.0) * (zc + za + 1.0) / (N + 2.0));
+    lp = lgamma(za + zb + 1.0) + lgamma(za + zc + 1.0) + lgamma(zc + zd + 1.0)
+       + lgamma(zb + zd + 1.0) - lgamma(N + 1.0)       - lgamma(za + 1.0)
+       - lgamma(zb + 1.0)      - lgamma(zc + 1.0)      - lgamma(zd + 1.0);
     max_c = a < d ? a + c : c + d;
     min_c = c < b ? 0 : c - b;
+    p = 1.0, z = 1.0, tza = za, tzb = zb, tzc = zc, tzd = zd;
 
-    p = 1.0;
-    z = 1.0;
-    tza = za;
-    tzb = zb;
-    tzc = zc;
-    tzd = zd;
-
-    for(tc=c+1; tc<=max_c; tc++) {
-        z *= ((tza--) * (tzd--)) / ((++tzc) * (++tzb));
-        if (z <= 1.0) {
-            break;
+    if (c >= mode) {
+        for (tc=c+1; tc<=max_c; tc++) {
+            z *= ((tza--) * (tzd--)) / ((++tzc) * (++tzb));
+            p += z;
         }
-    }
-    p += z;
-    tc++;
-    for(; tc<=max_c && z>0.0; tc++) {
-        z *= ((tza--) * (tzd--)) / ((++tzc) * (++tzb));
-        p += z;
-    }
-    z = 1.0;
-    for(tc=c-1; tc>=min_c; tc--) {
-        z *= ((zc--) * (zb--)) / ((++za) * (++zd));
-        if(z <= 1.0) {
-            break;
+        z = 1.0;
+        for (tc=c-1; tc>=mode; tc--) {
+            z *= ((zc--) * (zb--)) / ((++za) * (++zd));
         }
-    }
-    p += z;
-    tc--;
-    for(; tc>=min_c && z>0.0; tc--) {
-        z *= ((zc--) * (zb--)) / ((++za) * (++zd));
-        p += z;
+        for (; tc>=min_c; tc--) {
+            z *= ((zc--) * (zb--)) / ((++za) * (++zd));
+            if (z <= 1.0) {
+                p += z;
+                break;
+            }
+        }
+        for (--tc; tc>=min_c && z>0.0; tc--) {
+            z *= ((zc--) * (zb--)) / ((++za) * (++zd));
+            p += z;
+        }
+    } else {
+        for (tc=c-1; tc>=min_c; tc--) {
+            z *= ((tzc--) * (tzb--)) / ((++tza) * (++tzd));
+            p += z;
+        }
+        z = 1.0;
+        for (tc=c+1; tc<=mode; tc++) {
+            z *= ((za--) * (zd--)) / ((++zc) * (++zb));
+        }
+        for (; tc<=max_c; tc++) {
+            z *= ((za--) * (zd--)) / ((++zc) * (++zb));
+            if(z <= 1.0) {
+                p += z;
+                break;
+            }
+        }
+        for (++tc; tc<=max_c && z>0.0; tc++) {
+            z *= ((za--) * (zd--)) / ((++zc) * (++zb));
+            p += z;
+        }
     }
     lp += log(p);
-
     return lp < 0.0 ? lp : 0.0;
 }
 
