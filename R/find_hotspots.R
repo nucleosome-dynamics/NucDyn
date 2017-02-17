@@ -61,17 +61,33 @@
 .ranScorer <- function (start, end, xs)
     mapply(function (s, e) abs(xs[s:e]), start, end)
 
-.ran2df <- function (r, xs, pval)
+.meanArround <- function (x, a, n=3) {
+    i <- (x-3):(x+3)
+    i <- i[i > 0]
+    vals <- a[i]
+    vals <- vals(!is.na(vals))
+    mean(vals)
+}
+
+.ran2df <- function (r, xs, pval) {
+    peak <- start(r) + sapply(.ranScorer(start(r), end(r), xs), which.max)
+    score <- sapply(peak, .meanArround, pval)
     data.frame(start  = start(r),
                end    = end(r),
-               nreads = sapply(.ranScorer(start(r), end(r), xs), max),
-               score  = sapply(.ranScorer(start(r), end(r), pval), mean))
+               peak   = peak,
+               nreads = xs[peak],
+               score  = score)
+}
 
 .hsFromCov <- function(x, pvals, names) {
     by.sign <- .splitBySign(x)
     filtered <- lapply(by.sign, filterFFT, pcKeepComp=0.01, useOptim=TRUE)
     rans <- lapply(filtered, .getHsRanges)
-    dfs <- lapply(rans, .ran2df, x, pvals)
+    dfs <- mapply(.ran2df,
+                  rans,
+                  filtered,
+                  MoreArgs=list(pvals),
+                  SIMPLIFY=FALSE)
     for (i in seq_along(dfs)) {
         dfs[[i]][["type"]] <- names[[i]]
     }
