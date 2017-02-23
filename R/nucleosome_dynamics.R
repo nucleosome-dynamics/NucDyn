@@ -3,12 +3,11 @@
 setMethod(
     "nucleosomeDynamics",
     signature(setA="IRanges", setB="IRanges"),
-    function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
+    function(setA, setB, maxLen=170, equalSize=FALSE, readSize=140,
              maxDiff=74, minDiff=10) {
         sets <- list(setA, setB)
         myDyn <- .nucleosomeDynamics(mySets=sets,
                                      maxLen=maxLen,
-                                     roundPow=roundPow,
                                      equalSize=equalSize,
                                      readSize=readSize,
                                      maxDiff=maxDiff,
@@ -22,7 +21,7 @@ setMethod(
 setMethod(
     "nucleosomeDynamics",
     signature(setA="RangedData", setB="RangedData"),
-    function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
+    function(setA, setB, maxLen=170, equalSize=FALSE, readSize=140,
              maxDiff=74, minDiff=10, mc.cores=1) {
         sets <- list(setA, setB)
 
@@ -34,7 +33,6 @@ setMethod(
                 message(paste("Starting", chr))
                 dyn <- .nucleosomeDynamics(mySets=lapply(sets, "[", chr),
                                            maxLen=maxLen,
-                                           roundPow=roundPow,
                                            equalSize=equalSize,
                                            readSize=readSize,
                                            maxDiff=maxDiff,
@@ -56,7 +54,7 @@ setMethod(
 setMethod(
     "nucleosomeDynamics",
     signature(setA="GRanges", setB="GRanges"),
-    function(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140,
+    function(setA, setB, maxLen=170, equalSize=FALSE, readSize=140,
              maxDiff=74, minDiff=10, mc.cores=1) {
         sets <- list(setA, setB)
 
@@ -76,7 +74,6 @@ setMethod(
                 dyn <- .nucleosomeDynamics(
                     mySets=lapply(splitted, function(x) ranges(x[[chr]])),
                     maxLen=maxLen,
-                    roundPow=roundPow,
                     equalSize=equalSize,
                     readSize=readSize,
                     maxDiff=maxDiff,
@@ -137,7 +134,7 @@ setMethod(
     grLs[readTypes]  # keep them in the wanted order
 }
 
-.nucleosomeDynamics <- function(mySets, maxLen=170, roundPow=5, equalSize,
+.nucleosomeDynamics <- function(mySets, maxLen=170, equalSize,
                                 readSize=140, maxDiff=74, minDiff=10)
 {
     mySets <- lapply(mySets, .toIRanges)
@@ -164,9 +161,6 @@ setMethod(
         mySets <- newSets$rest
 
     } else {
-        # round the reads to powers of 5
-        mySets <- lapply(mySets, .setRounder, pow=roundPow)
-        #mySets <- lapply(mySets, IRanges::unique)
         mySets <- lapply(mySets, sort)  # keep them sorted
 
         originals <- mySets

@@ -65,13 +65,16 @@
     i <- (x-3):(x+3)
     i <- i[i > 0]
     vals <- a[i]
-    vals <- vals(!is.na(vals))
+    vals <- vals[!is.na(vals)]
     mean(vals)
 }
 
 .ran2df <- function (r, xs, pval) {
     peak <- start(r) + sapply(.ranScorer(start(r), end(r), xs), which.max)
     score <- sapply(peak, .meanArround, pval)
+    score[is.nan(score)] <- 1
+    nreads <- xs[peak]
+    nreads[is.na(nreads)] <- 0
     data.frame(start  = start(r),
                end    = end(r),
                peak   = peak,

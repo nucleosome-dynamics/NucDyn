@@ -14,17 +14,6 @@
     }
 }
 
-# round a number to a power of 5 to make things more discrete
-.roundToPower <- function(n, pow=5)
-    round(n/pow) * pow
-
-.setRounder <- function(set, pow=5)
-{  # make a set more discrete
-    start(set) <- .roundToPower(start(set), pow=pow)
-    end(set) <- .roundToPower(end(set), pow=pow)
-    set
-}
-
 .rmLongReads <- function(set, maxLen=170)
 {  # remove reads longer than a specified maximum length
     set[width(set) < maxLen, ]

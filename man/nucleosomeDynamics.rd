@@ -11,9 +11,9 @@
     reads of two NGS experiments of nucleosome coverage.
 }
 \usage{
-    \S4method{nucleosomeDynamics}{IRanges,IRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, minDiff=10)
-    \S4method{nucleosomeDynamics}{GRanges,GRanges}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, minDiff=10, mc.cores=1)
-    \S4method{nucleosomeDynamics}{RangedData,RangedData}(setA, setB, maxLen=170, equalSize=FALSE, roundPow=5, readSize=140, maxDiff=74, minDiff=10, mc.cores=1)
+    \S4method{nucleosomeDynamics}{IRanges,IRanges}(setA, setB, maxLen=170, equalSize=FALSE, readSize=140, maxDiff=74, minDiff=10)
+    \S4method{nucleosomeDynamics}{GRanges,GRanges}(setA, setB, maxLen=170, equalSize=FALSE, readSize=140, maxDiff=74, minDiff=10, mc.cores=1)
+    \S4method{nucleosomeDynamics}{RangedData,RangedData}(setA, setB, maxLen=170, equalSize=FALSE, readSize=140, maxDiff=74, minDiff=10, mc.cores=1)
 }
 \arguments{
     \item{setA}{
@@ -32,11 +32,6 @@
         conserving their original dyad position. Use it if the reads in your
         sets have differences in length (ie, due to differences in the
         digestion) that you are not interested in.
-    }
-    \item{roundPow}{
-        When equalSize is \code{FALSE}, the start and end of each read will be
-        rounded to a power of this number to allow a more granular analysis.
-        Set it to 0 if you don't want this granularization.
     }
     \item{readSize}{
         Length to which all reads will be set in case \code{equalSize} is
@@ -69,11 +64,6 @@
     shifts and/or indels. Both ref1 and ref2 need to be experimental nucleosome
     maps, either from the same sample with different conditions or from
     different samples.
-
-    Before the analysis read positions are granularized by setting their starts
-    and ends to numbers that are a power of \code{roundPow} (in the case where
-    \code{equalSize=FALSE}) or set to the length of \code{readSize} (if
-    \code{equalSize=TRUE}).
 
     Then, we look for a match to each read in ref1 in another read of ref2
     using a specific deffinition for what a "match" is. After all possible
