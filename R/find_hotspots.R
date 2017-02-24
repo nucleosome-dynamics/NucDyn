@@ -103,15 +103,13 @@
                    function (x)
                        as.vector(coverage(x))))
 
+findPVals <- function (x, y, wins=10000)
+    doBySplitting(.getVals, wins=wins, x, y)
+
 .findInRange <- function (dyn, wins=10000)
 {
     full.covs <- .getEqualCovs(dyn$originals)
-
-    pvals <- doBySplitting(.getPVals,
-                           wins=wins,
-                           full.covs[[1]],
-                           full.covs[[2]])
-
+    pvals <- findPVals(full.covs[[1]], full.covs[[2]], wins)
 
     ###########################################################################
 
