@@ -104,7 +104,7 @@
                        as.vector(coverage(x))))
 
 findPVals <- function (x, y, wins=10000)
-    doBySplitting(.getVals, wins=wins, x, y)
+    doBySplitting(.getPVals, wins=wins, x, y)
 
 .findInRange <- function (dyn, wins=10000)
 {
