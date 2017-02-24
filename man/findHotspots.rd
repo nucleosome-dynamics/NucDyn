@@ -103,7 +103,6 @@
     }
 }
 \author{
-    Oscar Flores \email{oflores@mmb.pcb.ub.es}\cr
     Ricard Illa \email{ricard.illa@irbbarcelona.org}
 }
 \keyword{manip}
