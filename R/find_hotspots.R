@@ -36,13 +36,11 @@
     list(a=a.prof, b=b.prof)
 }
 
-.myFilter <- function (xs)
-    # Attempt to apply a FFT filter, return NULL if an error occurs
-    tryCatch({
-        filterFFT(xs, pcKeepComp=0.01, useOptim=TRUE)
-    }, error=function(e) {
-        NULL
-    })
+.catcher <- function (f)
+    # Decorator for functions that may fail
+    function (...)
+        tryCatch(f(...),
+                 error=function (e) NULL)
 
 .makeVectsEqual <- function(x, y) {
     # Make two numerical vectors the same size by appending zeros to the
@@ -61,6 +59,18 @@
 .ranScorer <- function (start, end, xs)
     mapply(function (s, e) abs(xs[s:e]), start, end)
 
+.weightedMean <- function (x, weights) {
+    logx <- -log10(x)
+    avg <- sum(weights/sum(weights) * logx)
+    return (10^(-avg))
+}
+
+.ranIter <- function (ran, f, ...)
+    mapply(function (i, j)
+               do.call(f, lapply(list(...), `[`, i:j)),
+           start(ran),
+           end(ran))
+
 .meanArround <- function (x, a, n=3) {
     i <- (x-3):(x+3)
     i <- i[i > 0]
@@ -70,21 +80,34 @@
 }
 
 .ran2df <- function (r, xs, pval) {
-    peak <- start(r) + sapply(.ranScorer(start(r), end(r), xs), which.max)
-    score <- sapply(peak, .meanArround, pval)
-    score[is.nan(score)] <- 1
-    nreads <- xs[peak]
-    nreads[is.na(nreads)] <- 0
-    data.frame(start  = start(r),
-               end    = end(r),
-               peak   = peak,
-               nreads = xs[peak],
-               score  = score)
+    if (length(r)) {
+        peak <- start(r) + .ranIter(r, which.max, xs)
+        score <- .ranIter(r, .weightedMean, pval, xs)
+        nreads <- xs[peak]
+
+        score[is.na(score)] <- 1
+        nreads[is.na(nreads)] <- 0
+
+        data.frame(start  = start(r),
+                   end    = end(r),
+                   peak   = peak,
+                   nreads = nreads,
+                   score  = score)
+    } else {
+        data.frame(start  = integer(),
+                   end    = integer(),
+                   peak   = numeric(),
+                   nreads = numeric(),
+                   score  = numeric())
+    }
 }
 
 .hsFromCov <- function(x, pvals, names) {
     by.sign <- .splitBySign(x)
-    filtered <- lapply(by.sign, filterFFT, pcKeepComp=0.01, useOptim=TRUE)
+    filtered <- lapply(by.sign,
+                       .catcher(filterFFT),
+                       pcKeepComp=0.01,
+                       useOptim=TRUE)
     rans <- lapply(filtered, .getHsRanges)
     dfs <- mapply(.ran2df,
                   rans,
@@ -92,7 +115,11 @@
                   MoreArgs=list(pvals),
                   SIMPLIFY=FALSE)
     for (i in seq_along(dfs)) {
-        dfs[[i]][["type"]] <- names[[i]]
+        if (nrow(dfs[[i]])) {
+            dfs[[i]][["type"]] <- names[[i]]
+        } else {
+            dfs[[i]][["type"]] <- character()
+        }
     }
     rbind.fill(dfs)
 }
