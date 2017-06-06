@@ -177,7 +177,7 @@ setMethod(
 
         chrs <- levels(seqnames(setA)$originals)
 
-        chrIter <- function(chr, range=NULL) {
+        chrIter <- function (chr) {
             message(paste("Starting", chr))
             f <- function(x) ranges(x[seqnames(x) == chr])
             chrDyn <- mapply(list, f(setA), f(setB), SIMPLIFY=FALSE)
@@ -190,8 +190,19 @@ setMethod(
             hs
         }
 
-        hsLs <- .xlapply(chrs, chrIter, mc.cores=mc.cores)
-        hs <- do.call("rbind", hsLs)
+       if (length(chrs)) {
+           hsLs <- NucDyn:::.xlapply(chrs, chrIter)
+           hs <- do.call("rbind", hsLs)
+       } else {
+           hs <- data.frame(start  = integer(),
+                            end    = integer(),
+                            peak   = integer(),
+                            nreads = numeric(),
+                            score  = numeric(),
+                            type   = character(),
+                            chr    = character())
+       }
+
         if (!is.null(indel.threshold) & !is.null(shift.threshold)) {
             hs <- applyThreshold(hs, indel.threshold, shift.threshold)
         }

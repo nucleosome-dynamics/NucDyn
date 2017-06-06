@@ -63,15 +63,21 @@ mapplyer <- function (f, x)
 doBySplitting <- function(f, wins, ...) {
     xs <- list(...)
     n <- min(sapply(xs, length))
-    xs <- lapply(xs, `[`, 1:n)
 
-    splitted <- lapply(xs, windowSplitter, wins=wins)
+    if (n <= wins) {
+        return(f(...))
 
-    aa <- lapply(splitted, `[[`, 1)
-    bb <- lapply(splitted, `[[`, 2)
-    raa <- mapplyer(f, aa)
-    rbb <- mapplyer(f, bb)
+    } else {
+        xs <- lapply(xs, `[`, 1:n)
 
-    rejoined <- windowJoiner(raa, rbb, n, wins=wins)
-    return(rejoined)
+        splitted <- lapply(xs, windowSplitter, wins=wins)
+
+        aa <- lapply(splitted, `[[`, 1)
+        bb <- lapply(splitted, `[[`, 2)
+        raa <- mapplyer(f, aa)
+        rbb <- mapplyer(f, bb)
+
+        rejoined <- windowJoiner(raa, rbb, n, wins=wins)
+        return(rejoined)
+    }
 }
