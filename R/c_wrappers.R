@@ -13,6 +13,7 @@
     outA <- as.integer(rep(0, lenA))
     outB <- as.integer(rep(0, lenB))
 
+    gc()
     cOut <- .C(myFun,
                startA, endA, lenA,
                startB, endB, lenB,
@@ -33,6 +34,7 @@
     lenB <- as.integer(length(startsB))
     outB <- as.integer(rep(0, lenB))
 
+    gc()
     cOut <- .C(myFun, as.integer(maxDist),
                startsA, lenA,
                startsB, lenB,
@@ -54,6 +56,7 @@
     outA <- as.integer(rep(0, lenA))
     outB <- as.integer(rep(0, lenB))
 
+    gc()
     cOut <- .C(myFun,
                startA, lenA,
                startB, lenB,
@@ -74,6 +77,7 @@
     outA <- as.integer(rep(0, lenA))
     outB <- as.integer(rep(0, lenB))
 
+    gc()
     cOut <- .C(myFun,
                endA, lenA,
                endB, lenB,
@@ -96,6 +100,7 @@
     outA <- as.integer(rep(0, lenA))
     outB <- as.integer(rep(0, lenB))
 
+    gc()
     cOut <- .C(myFun,
                startA, endA, lenA,
                startB, endB, lenB,
@@ -121,6 +126,7 @@
     rightA <- as.integer(leftA)
     rightB <- as.integer(leftB)
 
+    gc()
     cOut <- .C(myFun,
                startA, endA, lenA,
                startB, endB, lenB,
@@ -155,6 +161,7 @@
     xRight <- as.integer(rep(0, xSize))
     yRight <- as.integer(rep(0, ySize))
 
+    gc()
     cOut <- .C(myFun,
                xStart, xEnd, xSize,
                yStart, yEnd, ySize,
