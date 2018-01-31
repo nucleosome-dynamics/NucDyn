@@ -1,0 +1,77 @@
+#include <Rcpp.h>
+#include <algorithm>
+using namespace Rcpp;
+using namespace std;
+
+IntegerVector get_idxs (IntegerVector x)
+{
+    int n = x.size();
+    int non_zeros = 0;
+    int i, j;
+
+    for (i = 0; i < n; ++i) {
+        if (x[i]) {
+            ++non_zeros;
+        }
+    }
+    IntegerVector out(non_zeros);
+    for (i = 0, j = 0; i < n; ++i) {
+        if (x[i]) {
+            out[j] = x[i];
+            ++j;
+        }
+    }
+    sort(out.begin(), out.end());
+
+    return out;
+}
+
+vector<vector<int>> make_pairs (IntegerVector x)
+{
+    int n = x.size();
+    vector<vector<int>> out(n, vector<int>(2));
+    for (int i = 0; i < n; ++i) {
+        out[i][0] = x[i];
+        out[i][1] = i;
+    }
+    return out;
+}
+
+bool cmp_fun (const vector<int> a, const vector<int> b)
+{
+    if (a[0] == b[0]) {
+        return a[1] < b[1];
+    } else {
+        return a[0] < b[0];
+    }
+}
+
+// [[Rcpp::export]]
+IntegerVector find_subs (IntegerVector subset)
+{
+    IntegerVector idx_array = get_idxs(subset);
+    int in_len = subset.size();
+    int out_len = idx_array.size();
+    IntegerVector out(out_len);
+
+    int i;
+    int zeros;
+
+    vector<vector<int>> sort_sub = make_pairs(subset);
+    sort(sort_sub.begin(), sort_sub.end(), cmp_fun);
+
+    zeros = 0;  // count the leading zeros
+    for (i = 0; i < in_len; ++i) {
+        if (sort_sub[i][0]) {
+            break;
+        } else {
+            ++zeros;
+        }
+    }
+
+    for (i = 0; i < out_len; ++i) {
+        out[i] = sort_sub[i + zeros][1] + 1;
+    }
+
+    return out;
+}

@@ -1,27 +1,7 @@
-.findSubs <- function(subseter)
-{
-    myFun <- "find_subs"
-    if (!is.loaded(myFun)) {
-        dyn.load("find_subs.so")
-    }
-
-    subset <- as.integer(subseter)
-    idxArray <- as.integer(sort(subseter[as.logical(subseter)]))
-
-    inLen <- as.integer(length(subset))
-    outLen <- as.integer(length(idxArray))
-
-    out <- as.integer(rep(0, outLen))
-
-    cOut <- .C(myFun, subset, idxArray, inLen, outLen, out=out)
-
-    return(cOut$out)
-}
-
 .separateGroups <- function(sets, subsetList)
 {
-    subA <- .findSubs(subsetList[[1]])
-    subB <- .findSubs(subsetList[[2]])
+    subA <- find_subs(subsetList[[1]])
+    subB <- find_subs(subsetList[[2]])
 
     seleA <- sets[[1]][subA]
     seleB <- sets[[2]][subB]
@@ -35,10 +15,10 @@
 
 .separateShifts <- function(sets, subsetList)
 {
-    subLeftA <- .findSubs(subsetList$left[[1]])
-    subLeftB <- .findSubs(subsetList$left[[2]])
-    subRightA <- .findSubs(subsetList$right[[1]])
-    subRightB <- .findSubs(subsetList$right[[2]])
+    subLeftA <- find_subs(subsetList$left[[1]])
+    subLeftB <- find_subs(subsetList$left[[2]])
+    subRightA <- find_subs(subsetList$right[[1]])
+    subRightB <- find_subs(subsetList$right[[2]])
 
     seleLeftA <- sets[[1]][subLeftA, ]
     seleLeftB <- sets[[2]][subLeftB, ]

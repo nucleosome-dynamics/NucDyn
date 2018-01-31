@@ -1,12 +1,3 @@
-.getPVals <- function (x, y) {
-    xs <- as.integer(x)
-    ys <- as.integer(y)
-    n <- as.integer(length(xs))
-    out <- as.numeric(rep(0, n))
-    cOut <- .C("get_pvals", xs, ys, n, out=out)
-    return(cOut$out)
-}
-
 .calcDiff <- function (x, y) {
     X <- sum(x)
     Y <- sum(y)
@@ -131,7 +122,7 @@
                        as.vector(coverage(x))))
 
 findPVals <- function (x, y, wins=10000)
-    doBySplitting(.getPVals, wins=wins, x, y)
+    doBySplitting(get_pvals, wins=wins, x, y)
 
 .findInRange <- function (dyn, wins=10000)
 {

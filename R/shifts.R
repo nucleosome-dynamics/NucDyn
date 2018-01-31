@@ -1,30 +1,3 @@
-.doShifts <- function(sets, max.dist, min.dist)
-{
-    preciseDyadPos <- function(set)
-        as.integer(((start(set) + end(set)) / 2) * 10)
-
-    xDyad <- preciseDyadPos(sets[[1]])
-    xSize <- as.integer(length(xDyad))
-    yDyad <- preciseDyadPos(sets[[2]])
-    ySize <- as.integer(length(yDyad))
-
-    xLeft <- .initEmptyVect(xSize)
-    yLeft <- .initEmptyVect(ySize)
-    yRight <- yLeft
-    xRight <- xLeft
-
-    maxDiff <- as.integer(max.dist * 10)
-    minDiff <- as.integer(min.dist * 10)
-
-    cOut <- .C("shifts",
-               xDyad, xSize, yDyad, ySize,
-               xLeft=xLeft, yLeft=yLeft, xRight=xRight, yRight=yRight,
-               maxDiff, minDiff)
-
-    return(list(left=list(cOut$xLeft, cOut$yLeft),
-                right=list(cOut$xRight, cOut$yRight)))
-}
-
 .buildZoneRange <- function(start, end, width)
 {
     if (any(sapply(list(start, end), length) == 0)) {
@@ -60,35 +33,10 @@
     return(rans)
 }
 
-.getAbsolutePos <- function(idxs, xs, subran, wholeran)
-{
-    idxs <- as.integer(idxs)
-    nidxs <- as.integer(length(idxs))
-
-    xs <- as.integer(xs)
-    xstart <- as.integer(start(subran))
-    xend <- as.integer(end(subran))
-    nxs <- as.integer(length(xs))
-
-    whole.xstart <- as.integer(start(wholeran))
-    whole.xend <- as.integer(end(wholeran))
-    nwhole <- as.integer(length(wholeran))
-
-    out <- as.integer(rep(0, nidxs))
-
-    cOut <- .C("find_abs_pos",
-               idxs, nidxs,
-               xs, xstart, xend, nxs,
-               whole.xstart, whole.xend, nwhole,
-               out=out)
-
-    return(cOut$out)
-}
-
 .absPos <- function(sh, sub.rans, sets)
 {
     xs <- sh[[1]][as.logical(sh[[1]])]
-    f <- function(a, b, c) .getAbsolutePos(xs, a, b, c)
+    f <- function(a, b, c) find_abs_pos(xs, a, b, c)
     mapply(f, sh, sub.rans, sets, SIMPLIFY=FALSE)
 }
 
@@ -114,7 +62,7 @@
     sub.rans <- lapply(sets,
                        function(s) s[f(s, bigzones[i])])
 
-    shs <- .doShifts(sub.rans, max.dist, min.dist)
+    shs <- do_shifts(sub.rans, max.dist, min.dist)
 
     absolute.pairs <- lapply(shs,
                              .absPos,
@@ -149,8 +97,9 @@
     return(joined)
 }
 
-.shifts <- function(sets, win.size=10000, max.dist=74, min.dist=10)
+shifts <- function(setA, setB, win.size=10000, max.dist=74, min.dist=10)
 {
+    sets <- list(setA, setB)
     sets.range <- range(do.call(`c`, sets))
 
     sep <- floor(win.size) / 2
@@ -203,7 +152,8 @@
                 rest=rest))
 }
 
-.applyDistThresh <- function (rs, minDiff=10) {
+.applyDistThresh <- function (rs, minDiff=10)
+{
     ds <- lapply(rs, .dyadPos)
     diffs <- abs(do.call(`-`, ds))
     sel <- diffs >= minDiff

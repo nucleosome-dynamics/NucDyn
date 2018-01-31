@@ -144,18 +144,13 @@ setMethod(
     mySets <- lapply(mySets, .rmLongReads, maxLen=maxLen)
     # make the mean read length of both sets equal
     if (equalSize) {
-        #mySets <- .stdSetLen(mySets)
-        ## remove reads that are too long (again)
-        #mySets <- lapply(mySets, function(x) .rmLongReads(x, maxLen=maxLen))
-
         mySets <- lapply(mySets, .setSizeTo, readSize=readSize)
-        #mySets <- lapply(mySets, IRanges::unique)
         mySets <- lapply(mySets, sort)  # keep them sorted
 
         originals <- mySets
 
         # reads considered to be the same with a small variance distance allowed
-        subsetList <- .equalsAtDist(mySets, maxDist=5)
+        subsetList <- equals_at_dist(mySets, maxDist=5)
         newSets <- .separateGroups(mySets, subsetList)
         equalReads <- newSets$matches
         mySets <- newSets$rest
@@ -166,25 +161,25 @@ setMethod(
         originals <- mySets
 
         # pairs that start and end at the same position
-        subsetList <- .equals(mySets)
+        subsetList <- equals(mySets[[1]], mySets[[2]])
         newSets <- .separateGroups(mySets, subsetList)
         equalReads <- newSets$matches
         mySets <- newSets$rest
 
         # pairs that start at the same position but end at a different one
-        subsetList <- .sameStart(mySets)
+        subsetList <- same_start(mySets[[1]], mySets[[2]])
         newSets <- .separateGroups(mySets, subsetList)
         sameStartReads <- newSets$matches
         mySets <- newSets$rest
 
         # pairs that end at the same position but start at a different one
-        subsetList <- .sameEnd(mySets)
+        subsetList <- same_end(mySets[[1]], mySets[[2]])
         newSets <- .separateGroups(mySets, subsetList)
         sameEndReads <- newSets$matches
         mySets <- newSets$rest
 
-        subsetListA <- .contained(mySets)
-        subsetListB <- rev(.contained(rev(mySets)))
+        subsetListA <- contained(mySets[[1]], mySets[[2]])
+        subsetListB <- rev(contained(mySets[[2]], mySets[[1]]))
 
         containedReadsA <- .separateGroups(mySets, subsetListA)$matches
         containedReadsB <- .separateGroups(mySets, subsetListB)$matches
@@ -199,7 +194,7 @@ setMethod(
 
     }
 
-    newSets <- .shifts(mySets, max.dist=maxDiff, min.dist=0)
+    newSets <- shifts(mySets[[1]], mySets[[2]], max.dist=maxDiff, min.dist=0)
 
     postLeft <- .applyDistThresh(newSets$left, minDiff)
     postRight <- .applyDistThresh(newSets$right, minDiff)
