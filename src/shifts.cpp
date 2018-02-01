@@ -1,7 +1,6 @@
 #include <Rcpp.h>
 #include <vector>
 using namespace Rcpp;
-using namespace std;
 
 const int GAP = -10000;
 const double MAX_SCORE = 100;
@@ -37,10 +36,10 @@ double get_score (int distance, int max_dist, int min_dist)
     }
 }
 
-vector<vector<int>> init_table (int nx, int ny)
+std::vector<std::vector<int>> init_table (int nx, int ny)
 {
     int i;
-    vector<vector<int>> S(nx+1, vector<int>(ny+1));
+    std::vector<std::vector<int>> S(nx+1, std::vector<int>(ny+1));
 
     S[0][0] = 0;
     for (i = 0; i < nx+1; ++i) {
@@ -53,8 +52,8 @@ vector<vector<int>> init_table (int nx, int ny)
     return S;
 }
 
-vector<vector<int>> fill_table (vector<vector<int>> S,
-                                IntegerVector xs, IntegerVector ys,
+std::vector<std::vector<int>> fill_table (std::vector<std::vector<int>> S,
+                                          IntegerVector xs, IntegerVector ys,
                                 int max_dist, int min_dist)
 {
     int a, b, c;
@@ -86,7 +85,8 @@ vector<vector<int>> fill_table (vector<vector<int>> S,
     return S;
 }
 
-List traceback (vector<vector<int>> S, IntegerVector xs, IntegerVector ys,
+List traceback (std::vector<std::vector<int>> S,
+                IntegerVector xs, IntegerVector ys,
                 int max_dist, int min_dist)
 {
     int nx = xs.size();
@@ -149,7 +149,7 @@ List do_shifts (S4 ra, S4 rb, int max_distance=74, int min_distance=10)
     IntegerVector xs = precise_dyad_pos(ra);
     IntegerVector ys = precise_dyad_pos(rb);
 
-    vector<vector<int>> S = init_table(xs.size(), ys.size());
+    std::vector<std::vector<int>> S = init_table(xs.size(), ys.size());
     S = fill_table(S, xs, ys, max_dist, min_dist);
 
     List res = traceback(S, xs, ys, max_dist, min_dist);

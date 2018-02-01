@@ -1,7 +1,7 @@
 #include <Rcpp.h>
 #include <algorithm>
+#include "helpers.h"
 using namespace Rcpp;
-using namespace std;
 
 IntegerVector get_idxs (IntegerVector x)
 {
@@ -21,29 +21,20 @@ IntegerVector get_idxs (IntegerVector x)
             ++j;
         }
     }
-    sort(out.begin(), out.end());
+    std::sort(out.begin(), out.end());
 
     return out;
 }
 
-vector<vector<int>> make_pairs (IntegerVector x)
+std::vector<std::vector<int>> make_pairs (IntegerVector x)
 {
     int n = x.size();
-    vector<vector<int>> out(n, vector<int>(2));
+    std::vector<std::vector<int>> out(n, std::vector<int>(2));
     for (int i = 0; i < n; ++i) {
         out[i][0] = x[i];
         out[i][1] = i;
     }
     return out;
-}
-
-bool cmp_fun (const vector<int> a, const vector<int> b)
-{
-    if (a[0] == b[0]) {
-        return a[1] < b[1];
-    } else {
-        return a[0] < b[0];
-    }
 }
 
 // [[Rcpp::export]]
@@ -57,7 +48,7 @@ IntegerVector find_subs (IntegerVector subset)
     int i;
     int zeros;
 
-    vector<vector<int>> sort_sub = make_pairs(subset);
+    std::vector<std::vector<int>> sort_sub = make_pairs(subset);
     sort(sort_sub.begin(), sort_sub.end(), cmp_fun);
 
     zeros = 0;  // count the leading zeros
