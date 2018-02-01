@@ -150,7 +150,7 @@ setMethod(
         originals <- mySets
 
         # reads considered to be the same with a small variance distance allowed
-        subsetList <- equals_at_dist(mySets, maxDist=5)
+        subsetList <- equals_at_dist(mySets, max_dist=5)
         newSets <- .separateGroups(mySets, subsetList)
         equalReads <- newSets$matches
         mySets <- newSets$rest

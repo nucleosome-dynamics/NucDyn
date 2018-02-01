@@ -23,4 +23,8 @@ importFrom(GenomicRanges, GRanges)
 
 importFrom(Rcpp, sourceCpp)
 
+importFrom(graphics, arrows, legend, lines, par, plot)
+
+importFrom(stats, median)
+
 export(nucleosomeDynamics, findHotspots, plotDynamics, set.a, set.b, applyThreshold, findPVals)
