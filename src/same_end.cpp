@@ -45,7 +45,7 @@ List same_end (S4 a, S4 b)
         for (; j < len_b && bs[j][0] <= as[i][0]; ++j) {
             if (out_b[bs[j][1]] == 0 && as[i][0] == bs[j][0]) {
                 out_a[as[i][1]] = x;
-                out_b[bs[i][1]] = x;
+                out_b[bs[j][1]] = x;
                 ++x;
                 break;
             }

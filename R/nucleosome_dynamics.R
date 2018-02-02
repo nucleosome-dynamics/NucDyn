@@ -114,16 +114,15 @@ setMethod(
                        "left.shifts", "right.shifts", "indels", "unpaired")
     }
 
-    setLs <- lapply(dyn, function(x) lapply(x, function(y) y[[i]]))
-
-    lens <- lapply(setLs, function(x) sapply(x, length))
+    setLs <- lapply(dyn, lapply, `[[`, i)
+    lens <- lapply(setLs, sapply, length)
 
     gr <- GRanges(
         seqnames = Rle(names(setLs), sapply(lens, sum)),
         ranges = do.call("c", unname(unlist(setLs))),
         type = Rle(sapply(setLs, names), unlist(lens))
     )
-    grLs <- split(gr, gr$type)  # split by type
+    grLs <- GenomicRanges::split(gr, gr$type)  # split by type
 
     for (type in readTypes) {  # add possibly missing types
         if (!type %in% names(grLs)) {

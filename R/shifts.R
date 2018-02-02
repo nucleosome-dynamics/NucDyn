@@ -45,12 +45,7 @@
     f <- function(a, xs)
         end(a) > start(xs) & start(a) < end(xs)
 
-    pos <- do.call(`&`,
-                   lapply(mapply(`[`,
-                                 sets,
-                                 dyads),
-                          f,
-                          ran))
+    pos <- do.call(`&`, lapply(mapply(`[`, sets, dyads), f, ran))
     lapply(dyads, `[`, pos)
 }
 
@@ -59,20 +54,10 @@
     f <- function(a, xs)
         end(a) > start(xs) & start(a) < end(xs)
 
-    sub.rans <- lapply(sets,
-                       function(s) s[f(s, bigzones[i])])
-
-    shs <- do_shifts(sub.rans, max.dist, min.dist)
-
-    absolute.pairs <- lapply(shs,
-                             .absPos,
-                             sub.rans,
-                             sets)
-
-    in.range <- lapply(absolute.pairs,
-                       .getInRange,
-                       sets,
-                       smallzones[i])
+    sub.rans <- lapply(sets, function(s) s[f(s, bigzones[i])])
+    shs <- do_shifts(sub.rans[[1]], sub.rans[[2]], max.dist, min.dist)
+    absolute.pairs <- lapply(shs, .absPos, sub.rans, sets)
+    in.range <- lapply(absolute.pairs, .getInRange, sets, smallzones[i])
 
     return(in.range)
 }
@@ -83,9 +68,7 @@
         xs[[i]][[j]]
 
     nestedLapply <- function(xs, ys, f)
-        lapply(xs,
-               function(x) lapply(ys,
-                                  function(y) f(x, y)))
+        lapply(xs, function(x) lapply(ys, function(y) f(x, y)))
 
     joined <- nestedLapply(
         is, js,
@@ -113,9 +96,9 @@ shifts <- function(setA, setB, win.size=10000, max.dist=74, min.dist=10)
                               win.size)
 
     if (any(sapply(list(zone.a, zone.b), is.null))) {
-        return(list(left=list(IRanges(), IRanges()),
-                    right=list(IRanges(), IRanges()),
-                    rest=list(IRanges(), IRanges())))
+        return(list(left  = list(IRanges(), IRanges()),
+                    right = list(IRanges(), IRanges()),
+                    rest  = list(IRanges(), IRanges())))
     }
 
     a.shrinked <- .shrinker(zone.a, except.start=1)
@@ -132,24 +115,18 @@ shifts <- function(setA, setB, win.size=10000, max.dist=74, min.dist=10)
                        max.dist,
                        min.dist)
 
-    idxs <- .joinZones(by.zones,
-                       c("left", "right"),
-                       c(1, 2))
+    idxs <- .joinZones(by.zones, c("left", "right"), c(1, 2))
 
     left.shifts <- mapply(`[`, sets, idxs$left)
     right.shifts <- mapply(`[`, sets, idxs$right)
 
-    rest <- mapply(`[`,
-                   sets,
-                   lapply(do.call(function(...) mapply(c,
-                                                       ...,
-                                                       SIMPLIFY=FALSE),
-                                  idxs),
-                          `-`))
+    f <- function (...)
+        mapply(c, ..., SIMPLIFY=FALSE)
+    rest <- mapply(`[`, sets, lapply(do.call(f, idxs), `-`))
 
-    return(list(left=left.shifts,
-                right=right.shifts,
-                rest=rest))
+    return(list(left  = left.shifts,
+                right = right.shifts,
+                rest  = rest))
 }
 
 .applyDistThresh <- function (rs, minDiff=10)
@@ -161,6 +138,5 @@ shifts <- function(setA, setB, win.size=10000, max.dist=74, min.dist=10)
     pos.sel <- lapply(rs, `[`,  sel)
     neg.sel <- lapply(rs, `[`, !sel)
 
-    list(properShifts=pos.sel,
-         smallShifts=neg.sel)
+    list(properShifts=pos.sel, smallShifts=neg.sel)
 }

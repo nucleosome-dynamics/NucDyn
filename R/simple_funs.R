@@ -83,11 +83,16 @@
 }
 
 .toIRanges <- function (set)
-    if (class(set) == "RangedData") {
+{
+    cl <- class(set)
+    if (cl == "RangedData") {
         IRanges(start=start(set), end=end(set))
+    } else if (cl == "CompressedIRangesList") {
+        do.call(c, unname(set))
     } else {
         set
     }
+}
 
 .dyadPos <- function(ran)
     round((start(ran) + end(ran)) / 2)
