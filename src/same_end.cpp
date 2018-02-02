@@ -1,15 +1,15 @@
 #include <Rcpp.h>
 #include <vector>
 #include <algorithm>
-#include "helpers.cpp"
+#include "helpers.h"
 using namespace Rcpp;
 
-std::vector<std::vector<int>> make_end_pairs (S4 x)
+std::vector< std::vector<int> > make_end_pairs (S4 x)
 {
     IntegerVector start = x.slot("start");
     IntegerVector width = x.slot("width");
     int n = start.size();
-    std::vector<std::vector<int>> out(n, std::vector<int>(2));
+    std::vector< std::vector<int> > out(n, std::vector<int>(2));
     for (int i = 0; i < n; ++i) {
         out[i][0] = start[i] + width[i] - 1;
         out[i][1] = i;
@@ -33,8 +33,8 @@ List same_end (S4 a, S4 b)
     IntegerVector out_b(len_b);
 
     // create arrays 2D to be able to sort them and keep track of the original order
-    std::vector<std::vector<int>> as = make_end_pairs(a);
-    std::vector<std::vector<int>> bs = make_end_pairs(b);
+    std::vector< std::vector<int> > as = make_end_pairs(a);
+    std::vector< std::vector<int> > bs = make_end_pairs(b);
 
     // searching for pairs in sorted arrays allows to do it in a faster way
     std::sort(as.begin(), as.end(), cmp_fun);

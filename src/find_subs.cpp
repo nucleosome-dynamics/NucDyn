@@ -26,10 +26,10 @@ IntegerVector get_idxs (IntegerVector x)
     return out;
 }
 
-std::vector<std::vector<int>> make_pairs (IntegerVector x)
+std::vector< std::vector<int> > make_pairs (IntegerVector x)
 {
     int n = x.size();
-    std::vector<std::vector<int>> out(n, std::vector<int>(2));
+    std::vector< std::vector<int> > out(n, std::vector<int>(2));
     for (int i = 0; i < n; ++i) {
         out[i][0] = x[i];
         out[i][1] = i;
@@ -48,7 +48,7 @@ IntegerVector find_subs (IntegerVector subset)
     int i;
     int zeros;
 
-    std::vector<std::vector<int>> sort_sub = make_pairs(subset);
+    std::vector< std::vector<int> > sort_sub = make_pairs(subset);
     sort(sort_sub.begin(), sort_sub.end(), cmp_fun);
 
     zeros = 0;  // count the leading zeros
