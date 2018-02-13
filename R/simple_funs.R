@@ -1,4 +1,9 @@
-# wrapper to choose between lapply and mclapply accordingly
+#' mclapply wrapper
+#'
+#' wrapper to choose between lapply and mclapply accordingly
+#'
+#' @importFrom parallel mclapply
+#'
 .xlapply <- function(X, FUN, mc.cores=1, ...)
 {
     if (mc.cores > 1) {
@@ -14,11 +19,14 @@
     }
 }
 
+#' @importMethodsFrom IRanges width
 .rmLongReads <- function(set, maxLen=170)
 {  # remove reads longer than a specified maximum length
     set[width(set) < maxLen, ]
 }
 
+#' @importFrom stats median
+#' @importMethodsFrom IRanges start end width "start<-" "end<-"
 .stdSetLen <- function(sets)
 {  # make the median read length of both sets roughly equal, by enlarging
    # the reads in the set with the smallest median length
@@ -38,6 +46,7 @@
     list(set1, set2)
 }
 
+#' @importMethodsFrom IRanges start
 .normSize <- function (sets)
 {
     sizeA <- length(sets[[1]])
@@ -73,6 +82,7 @@
     return (list(removed=removed, rest=rest))
 }
 
+#' @importMethodsFrom IRanges reduce start edn "start<-" "end<-"
 .clusterizeShifts <- function (left, right, maxDiff=74)
 {
     allShifts <- c(left, right)
@@ -82,6 +92,8 @@
     reduce(reducedShifts)
 }
 
+#' @importFrom IRanges IRanges
+#' @importMethodsFrom IRanges start end
 .toIRanges <- function (set)
 {
     cl <- class(set)
@@ -94,9 +106,11 @@
     }
 }
 
+#' @importMethodsFrom IRanges start end
 .dyadPos <- function(ran)
     round((start(ran) + end(ran)) / 2)
 
+#' @importFrom IRanges IRanges
 .setSizeTo <- function(set, readSize)
     IRanges(start=.dyadPos(set) - (readSize/2), width=readSize)
 

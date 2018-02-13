@@ -1,3 +1,4 @@
+#' @importFrom IRanges IRanges
 .buildZoneRange <- function(start, end, width)
 {
     if (any(sapply(list(start, end), length) == 0)) {
@@ -9,6 +10,7 @@
     return(zone.rans)
 }
 
+#' @importMethodsFrom IRanges start end width "start<-" "end<-"
 .shrinker <- function(rans, by=2, except.start=NULL, except.end=NULL)
 {
     old.width <- width(rans)[1]
@@ -40,6 +42,7 @@
     mapply(f, sh, sub.rans, sets, SIMPLIFY=FALSE)
 }
 
+#' @importMethodsFrom IRanges start end
 .getInRange <- function(dyads, sets, ran)
 {
     f <- function(a, xs)
@@ -49,6 +52,7 @@
     lapply(dyads, `[`, pos)
 }
 
+#' @importMethodsFrom IRanges start end
 .doZone <- function(i, bigzones, smallzones, sets, max.dist, min.dist)
 {
     f <- function(a, xs)
@@ -80,6 +84,8 @@
     return(joined)
 }
 
+#' @importFrom IRanges IRanges
+#' @importMethodsFrom IRanges start end
 shifts <- function(setA, setB, win.size=10000, max.dist=74, min.dist=10)
 {
     sets <- list(setA, setB)

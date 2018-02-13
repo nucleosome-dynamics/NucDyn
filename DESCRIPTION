@@ -7,8 +7,10 @@ Author: Ricard Illa
 Maintainer: Ricard Illa <ricard.illa@irbbarcelona.org>
 Description: Nucleosome occupancy dynamic comparison between two reference states.
 License: file LICENSE
-Depends: GenomicRanges
-Imports: methods, S4Vectors, BiocGenerics, IRanges, nucleR, parallel, plyr, doParallel, Rcpp
+Depends: methods
+Imports: GenomeInfoDb, GenomicRanges, S4Vectors, BiocGenerics, IRanges, nucleR, parallel, plyr, doParallel, Rcpp
 LinkingTo: Rcpp
 LazyLoad: yes
 Packaged: 2015-04-01 14:02:52 UTC; rilla
+RoxygenNote: 6.0.1
+Roxygen: list(markdown = TRUE)

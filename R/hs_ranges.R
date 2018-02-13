@@ -69,6 +69,7 @@
     sort(unique(c(extraIsland.lims, intraIsland.lims)))
 }
 
+#' @importFrom IRanges IRanges
 .lims2range <- function (lims) {
     if (length(lims) > 0) {
         IRanges(start=c(1, lims[-length(lims)] + 2), end=lims)
@@ -77,6 +78,7 @@
     }
 }
 
+#' @importMethodsFrom IRanges start end
 .peaksFromRanges <- function (xs, rans) {
     doRange <- function (start, end, xs) {
         sub.ran <- xs[start:end]
@@ -95,6 +97,7 @@
                   SIMPLIFY=FALSE))
 }
 
+#' @importMethodsFrom IRanges start end
 .filterEmptyRanges <- function (rans, xs) {
     doRange <- function (start, end, xs)
         sum(xs[start:end]) > 0

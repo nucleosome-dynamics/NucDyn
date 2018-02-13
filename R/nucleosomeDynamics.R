@@ -1,5 +1,89 @@
-#!/usr/bin/env Rscript
+#' Run nucleosomeDynamics to compare two sets.
+#'
+#' This is the main function in nucleosomeDynamics. It allows to compare the
+#' reads of two NGS experiments of nucleosome coverage.
+#'
+#' The aim of NucleosomeDynamics is to infer "movement" (with direction and
+#' magnitude) of the reads between two reference nucleosome maps. In contrast
+#' with a simple coverage difference, NucleosomeDynamics can tell how the reads
+#' change between two different experiments. This is useful to analyze regions
+#' where fine regulatory role of the nucleosomes is suspected to happen.
+#'
+#' This method is based on the idea that reads in a reference state (ref1)
+#' should match those in another reference state (ref2) after applying a few
+#' shifts and/or indels. Both ref1 and ref2 need to be experimental nucleosome
+#' maps, either from the same sample with different conditions or from
+#' different samples.
+#'
+#' Then, we look for a match to each read in ref1 in another read of ref2 using
+#' a specific deffinition for what a "match" is. After all possible matches
+#' have been found, we set those reads apart and we look for matches in the
+#' remaining reads using a different definition for what a "match" is.  Then,
+#' to account for the possibility that one sample has a higher coverage than
+#' the other, randomly picked reads are removed from the dataset with more
+#' reads to that they are the same size.  After this, all the remaining reads
+#' are considered indels.
+#'
+#' Since they are tried sequentially, the definition of each type of match
+#' implies that the previous definitions tried are do not hold.  The different
+#' types of matches, in the order in which they are tried are:
+#'
+#' * Coinciding: Reads that start and end in the exact same position in both
+#'   sets.
+#' * Same start: Reads that start in the same position in both sets but end at
+#'   a different one.
+#' * Same end: Reads that end in the same position in both sets but start at a
+#'   different one.
+#' * Contained: Reads from one set that are contained or contain reads from the
+#'   other set. For a read to be contained by another, it has to start at a
+#'   more upstream position but end in a more downstream position than the
+#'   second read.
+#' * Shifts: Reads whose dyads are at a maximum distance of `maxDist` (default
+#'   is 74 bp.).
+#'
+#' If `equalSize=TRUE`, all reads are forced to the same size, to the match
+#' types "Same start", "Same end" and "Contained" do not apply.
+#'
+#' In an attempt to find the optimum pairing for the shifts, we use dynamic
+#' programming approach. It is done in such a way that the score is inversely
+#' proportional to the dyad distance (to favor shortest possible distance), but
+#' with a very high gap penalty (to favor more pairs at longer distance rather
+#' than less closer pairs) and a penalty of `-Inf` for distances higher than
+#' `maxDist` so that those don't happen at all.
+#'
+#' @param setA Reads of the first experiment in `IRanges`, `RangedData`, or
+#'   `GRanges`. The format should the same of the one in setB.
+#' @param setB Reads of the second experiment in `IRanges`, `RangedData`, or
+#'   `GRanges. The format should the the same of the one in setA.
+#' @param maxLen Reads longer than this number will be filtered out.
+#' @param equalSize If set to `TRUE`, all sets will be set to the same length,
+#'   conserving their original dyad position. Use it if the reads in your sets
+#'   have differences in length (ie, due to differences in the digestion) that
+#'   you are not interested in.
+#' @param readSize Length to which all reads will be set in case `equalSize` is
+#'   `TRUE`. It is ignored when `equalSize` is set to `FALSE`.
+#' @param maxDiff Maximum distance between the dyads of two reads that allows
+#'   them to still be considered a "shift".
+#' @param minDiff Minimum distance between the dyads of two reads that allows
+#'   them to still be considered a "shift".
+#' @param mc.cores If `parallel` support, the number of cores available. This
+#'   option is only used if the provided sets are from more than one
+#'   chromosome.
+#'
+#' @return An object of class [NucDyn-class].
+#'
+#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}
+#' @keywords manip
+#' @rdname nucleosomeDynamics
+#'
+setGeneric(
+    "nucleosomeDynamics",
+    function(setA, setB, maxLen=170, equalSize=FALSE, readSize=140,
+             maxDiff=74, minDiff=10, mc.cores=1)
+        standardGeneric("nucleosomeDynamics")
+)
 
+#' @rdname nucleosomeDynamics
 setMethod(
     "nucleosomeDynamics",
     signature(setA="IRanges", setB="IRanges"),
@@ -18,6 +102,8 @@ setMethod(
     }
 )
 
+#' @rdname nucleosomeDynamics
+#' @importMethodsFrom S4Vectors space
 setMethod(
     "nucleosomeDynamics",
     signature(setA="RangedData", setB="RangedData"),
@@ -51,6 +137,9 @@ setMethod(
     }
 )
 
+#' @rdname nucleosomeDynamics
+#' @importMethodsFrom GenomeInfoDb seqnames
+#' @importMethodsFrom IRanges ranges
 setMethod(
     "nucleosomeDynamics",
     signature(setA="GRanges", setB="GRanges"),
@@ -101,6 +190,8 @@ setMethod(
            set.b=.getGRLs(dyn, 2, equalSize))
 }
 
+#' @importFrom GenomicRanges GRanges
+#' @importMethodsFrom S4Vectors Rle
 .getGRLs <- function(dyn, i, equalSize)
 {  # Build a GRangesList for a given set
 
@@ -119,10 +210,10 @@ setMethod(
 
     gr <- GRanges(
         seqnames = Rle(names(setLs), sapply(lens, sum)),
-        ranges = do.call("c", unname(unlist(setLs))),
-        type = Rle(sapply(setLs, names), unlist(lens))
+        ranges   = do.call("c", unname(unlist(setLs))),
+        type     = Rle(sapply(setLs, names), unlist(lens))
     )
-    grLs <- GenomicRanges::split(gr, gr$type)  # split by type
+    grLs <- split(gr, gr$type)  # split by type
 
     for (type in readTypes) {  # add possibly missing types
         if (!type %in% names(grLs)) {
@@ -133,6 +224,7 @@ setMethod(
     grLs[readTypes]  # keep them in the wanted order
 }
 
+#' @importFrom IRanges IRanges
 .nucleosomeDynamics <- function(mySets, maxLen=170, equalSize,
                                 readSize=140, maxDiff=74, minDiff=10)
 {
@@ -148,7 +240,8 @@ setMethod(
 
         originals <- mySets
 
-        # reads considered to be the same with a small variance distance allowed
+        # reads considered to be the same with a small variance distance
+        # allowed
         subsetList <- equals_at_dist(mySets, max_dist=5)
         newSets <- .separateGroups(mySets, subsetList)
         equalReads <- newSets$matches
@@ -208,9 +301,6 @@ setMethod(
 
     mySets <- newSets$rest
 
-    #equalNumbered <- .normSize(mySets)
-    #discarded <- equalNumbered$removed
-    #mySets <- equalNumbered$rest
     discarded <- list(IRanges(), IRanges())
 
     if (equalSize) {
