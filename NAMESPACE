@@ -2,6 +2,7 @@
 
 export(findHotspots)
 export(findPVals)
+export(nucleosomeDynamics)
 importClassesFrom(GenomicRanges,GRangesList)
 importFrom(GenomicRanges,GRanges)
 importFrom(IRanges,IRanges)

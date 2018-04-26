@@ -75,6 +75,7 @@
 #' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}
 #' @keywords manip
 #' @rdname nucleosomeDynamics
+#' @export nucleosomeDynamics
 #'
 setGeneric(
     "nucleosomeDynamics",
