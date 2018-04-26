@@ -20,6 +20,6 @@
 #' @author Ricard Illa, Maintainer: Ricard Illa <ricard.illa@@irbbarcelona.org>
 #'
 #' @importFrom methods new
-#' @useDynLib
+#' @useDynLib NucDyn
 #'
 NULL
