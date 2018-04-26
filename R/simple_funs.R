@@ -82,7 +82,7 @@
     return (list(removed=removed, rest=rest))
 }
 
-#' @importMethodsFrom IRanges reduce start edn "start<-" "end<-"
+#' @importMethodsFrom IRanges reduce start end "start<-" "end<-"
 .clusterizeShifts <- function (left, right, maxDiff=74)
 {
     allShifts <- c(left, right)
