@@ -214,7 +214,7 @@ setMethod(
         ranges   = do.call("c", unname(unlist(setLs))),
         type     = Rle(sapply(setLs, names), unlist(lens))
     )
-    grLs <- split(gr, gr$type)  # split by type
+    grLs <- S4Vectors::split(gr, gr$type)  # split by type
 
     for (type in readTypes) {  # add possibly missing types
         if (!type %in% names(grLs)) {
