@@ -257,11 +257,18 @@ setMethod(
 #' Calculate a vector of p-values expressing the difference between two
 #' coverages. Works by windows.
 #'
-#' @param x First coverage.
-#' @param y Second coverage.
+#' @param x Coverage of the first sample for a given chromosome.
+#' @param y Coverage of the second sample for the same chromosome as x.
 #' @param wins Size of the window.
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}
+#' @return A `numeric` vector of p-values per base-pair.
+#'
+#' @examples
+#'     data(sample_chrII)
+#'     pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)
+#'
+#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}, 
+#'     Diana Buitrago, Diego Gallego
 #' @keywords manip
 #' @export findPVals
 #'

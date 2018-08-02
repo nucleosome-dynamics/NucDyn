@@ -8,17 +8,26 @@ coverages.}
 findPVals(x, y, wins = 10000)
 }
 \arguments{
-\item{x}{First coverage.}
+\item{x}{Coverage of the first sample for a given chromosome.}
 
-\item{y}{Second coverage.}
+\item{y}{Coverage of the second sample for the same chromosome as x.}
 
 \item{wins}{Size of the window.}
+}
+\value{
+A \code{numeric} vector of p-values per base-pair.
 }
 \description{
 Calculate a vector of p-values expressing the difference between two
 coverages. Works by windows.
 }
+\examples{
+    data(sample_chrII)
+    pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)
+
+}
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org}
+Ricard Illa \email{ricard.illa@irbbarcelona.org},
+Diana Buitrago, Diego Gallego
 }
 \keyword{manip}

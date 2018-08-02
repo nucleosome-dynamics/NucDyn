@@ -14,9 +14,9 @@ nucleosomeDynamics(setA, setB, maxLen = 170, equalSize = FALSE,
 \S4method{nucleosomeDynamics}{IRanges,IRanges}(setA, setB, maxLen = 170,
   equalSize = FALSE, readSize = 140, maxDiff = 74, minDiff = 10)
 
-\S4method{nucleosomeDynamics}{RangedData,RangedData}(setA, setB, maxLen = 170,
-  equalSize = FALSE, readSize = 140, maxDiff = 74, minDiff = 10,
-  mc.cores = 1)
+\S4method{nucleosomeDynamics}{RangedData,RangedData}(setA, setB,
+  maxLen = 170, equalSize = FALSE, readSize = 140, maxDiff = 74,
+  minDiff = 10, mc.cores = 1)
 
 \S4method{nucleosomeDynamics}{GRanges,GRanges}(setA, setB, maxLen = 170,
   equalSize = FALSE, readSize = 140, maxDiff = 74, minDiff = 10,

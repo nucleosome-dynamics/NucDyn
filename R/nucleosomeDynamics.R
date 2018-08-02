@@ -104,7 +104,7 @@ setMethod(
 )
 
 #' @rdname nucleosomeDynamics
-#' @importMethodsFrom S4Vectors space
+#' @importMethodsFrom IRanges space
 setMethod(
     "nucleosomeDynamics",
     signature(setA="RangedData", setB="RangedData"),

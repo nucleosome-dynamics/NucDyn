@@ -47,6 +47,7 @@
 #' @seealso [nucleosomeDynamics()]
 #' @keywords manip
 #' @importClassesFrom GenomicRanges GRangesList
+#' @import doParallel Rcpp BiocGenerics
 #'
 NucDyn <- setClass(
     "NucDyn",

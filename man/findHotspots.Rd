@@ -9,8 +9,8 @@
 findHotspots(dyn, wins = 10000, indel.threshold = NULL,
   shift.threshold = NULL, mc.cores = 1)
 
-\S4method{findHotspots}{NucDyn}(dyn, wins = 10000, indel.threshold = NULL,
-  shift.threshold = NULL, mc.cores = 1)
+\S4method{findHotspots}{NucDyn}(dyn, wins = 10000,
+  indel.threshold = NULL, shift.threshold = NULL, mc.cores = 1)
 }
 \arguments{
 \item{dyn}{NucDyn object with the dynamic to analyze.}
@@ -40,43 +40,6 @@ nucleosomes).
 }
 \description{
 Find hotspots from a given nucleosome dynamics.
-}
-\details{
-This function is aimed to help in the analysis of the nucleosome dynamics by
-pointing out these regions with relevant changes in the individual position
-of the nucleosomes.
-
-There are 4 types of basic hotspots, plus their combinations. Basic ones
-are:
-\itemize{
-\item Translational movement of nucleosomes, downstream (+).
-\item Translational movement of nucleosomes, upstream (-).
-\item Nucleosome reads removed from that locus.
-\item Nucleosome reads added to that locus.
-}
-
-As translational and coverage changes can happen anywhere, only those
-involving a certain number of reads are reported. This number can by
-adjusted by the \code{threshold} parameter. If \code{threshold} is a \code{character}
-vector representing a percentage value (ie, \code{"60\\\%"}), this will be
-automatically converted to the absolute value given by the corresponding
-percentile of the coverage in the window. If, instead, \code{threshold} is a
-\code{numeric} value, this value will be used as absolute threhold.
-
-It two adjacent hotspots with shifts in opposite directions are detected but
-one of them is relatively small in comparison with the other, but will be
-reported as shifts, disregarding the value of \code{combined}. We consider two
-hotspots of the same magnitude if the ratio between the number of reads in
-one and the other is smaller than \code{same.magnitude}. This ratio is always
-performed by using the larger number as numerator and the smaller as
-denominator; therefore, \code{same.magnitude} must always be greater of equal
-than 1.
-
-For example, with \code{same.magnitude=2}, we consider that 25 reads shifting
-downstream followed bby 17 reads shifting upstream will be of the same
-magnitude (25/17 == 1.47 < 2) and we will annotate it as a "DISPERSION". In
-another example, if we have 25 shifts downstream followed by only 5 shifts
-upstream (25/5 == 5 > 2), both hotspot will be annotated as "SHIFT".
 }
 \author{
 Ricard Illa \email{ricard.illa@irbbarcelona.org}

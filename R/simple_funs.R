@@ -1,9 +1,10 @@
-#' mclapply wrapper
-#'
-#' wrapper to choose between lapply and mclapply accordingly
-#'
+# mclapply wrapper
+#
+# wrapper to choose between lapply and mclapply accordingly
+#
+#
+
 #' @importFrom parallel mclapply
-#'
 .xlapply <- function(X, FUN, mc.cores=1, ...)
 {
     if (mc.cores > 1) {

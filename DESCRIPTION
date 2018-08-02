@@ -1,17 +1,18 @@
 Package: NucDyn
 Type: Package
 Title: Nucleosome Dynamics
-Version: 0.1
+Version: 0.99.0
 Date: 2018-02-13
 Author: Ricard Illa
 Maintainer: Ricard Illa <ricard.illa@irbbarcelona.org>
 Description: Nucleosome occupancy dynamic comparison between two reference states.
 License: file LICENSE
-Depends: methods
-Imports: GenomeInfoDb, GenomicRanges, S4Vectors, BiocGenerics, IRanges, nucleR, parallel, plyr, doParallel, Rcpp
+Depends: R (>= 3.5), methods
+Imports: GenomeInfoDb, GenomicRanges, S4Vectors, BiocGenerics, IRanges, nucleR, parallel, plyr, doParallel, Rcpp, graphics, stats
 Suggests: BiocStyle, knitr, rmarkdown
 LazyLoad: yes
 LinkingTo: Rcpp
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Roxygen: list(markdown = TRUE)
+biocViews: Sequencing, Genetics, MNaseSeq
