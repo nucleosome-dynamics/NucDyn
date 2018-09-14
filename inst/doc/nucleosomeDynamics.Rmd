@@ -1,0 +1,92 @@
+---
+title: "NucleosomeDynamics"
+author:
+  - name: Ricard Illa Pujagut
+    affiliation: Institute for Research in Biomedicine
+date: "`r Sys.Date()`"
+output: BiocStyle::pdf_document
+vignette: >
+  %\VignetteIndexEntry{NucleosomeDynamics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Nucleosome Dynamics allows detection of changes in the positions of nucleosomes
+at single read level between two reference nucleosome maps.
+Changes include shifts (moves), indels (insertions/deletions) of the existing
+reads in initial state to match the reference final state.
+
+## Method
+
+Nucleosome Dynamics is a method that allows comparison of two diferent
+MNase-seq experiments (Condition 1 and Condition 2) and detects local changes
+like:
+
+* **Upstream shifts**, were the occupancy is shifted upstream on Condition 2
+  relative to Condition 1.
+* **Downstream shifts**, were the occupancy is shifted downstream on Condition
+  2 relative to Condition 1.
+* **Inclusions**, where the nucleosome occupancy is significantly increased.
+* **Evictions**, where the nucleosome occupancy is significantly decreased.
+
+Nucleosome Dynamics tries to identify those changes by working at a read-level.
+The way its pipeline works is by sequentially pairing reads of one experiment
+with reads of the second experiment and setting those paired reads apart.
+
+First, all reads that are identical on both experiments are separated. Then,
+the reads that either start or end at the same position are separated as well.
+Next, the reads from one experiment whose range is completely contained by the
+range of a read in the other experiment, are paired and separated too.
+This first pairing, account for either differences in MNase digestion or for no
+differences at all, so after removing those, what's left accounts for
+differences.
+
+Nucleosome Dynamics then pairs reads from one experiment to reads in the other
+experiment whose center is slightly shifted either upstream or downstream
+relative to each other. In an attempt to find the best possible combination of
+pairs, a dynamic programming algorithm is used.
+The dynamic programming algorithm is set so that:
+
+1. The most number of pairs possible is found.
+2. The centers of the paired reads are as close as possible.
+3. Reads whose center is futher apart than 74 bp. are never paired.
+
+To achieve that, the dynamic programming algorithm works the following way:
+
+1. Gaps are highly penalized (to achieve maximum number of pairs).
+2. Pairs are given a score that is inversely proportional to the centers
+   distance (to prioratize close pairs).
+3. Centers distance bigger than 74 bp. are given a score of -Infinity so that
+   it can never happen.
+
+Once the shift pairs have been found, accumulations of such are considered
+shift hotspots.
+
+In order to identify significant changes in occupancy (insertions and
+deletions), the coverage of the reads in both experiments is used.
+First a normalized z score accross the genome is calculated, assuming a
+hypergeometric distrubition. This score is normalized on a 10000 bp. windows,
+so it takes into account fluctuations of coverage accross big segments of the
+genome and fins locally significant differences.
+
+Positive peaks of that z score mean that the coverage of the Experiment 1 is
+significantly higher than the coverage of the Experiment 2, and therefore it's
+considered a deletion. Similarly, negative z score peaks represent regions
+where the coverage of the Experiment 2 is significantly higher and therefore
+classified as insertions.
+
+Finally, the Nucleosome Dynamics pipeline scores the hotspots found. To do so,
+a p-value is calculated for each point on the sequence, that accounts
+statistically significant differences of coverage on a 10000 bp. window.
+On 10000 bp. windows and for each position, a Fisher's test is calculated with
+the following contingency table.
+
+Each hotspot is given the p-value at its peak position as score. Then a
+threshold is applied so that only the more relevant hotspots are reported.

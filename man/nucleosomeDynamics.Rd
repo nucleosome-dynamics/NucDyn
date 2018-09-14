@@ -106,7 +106,14 @@ with a very high gap penalty (to favor more pairs at longer distance rather
 than less closer pairs) and a penalty of \code{-Inf} for distances higher than
 \code{maxDist} so that those don't happen at all.
 }
+\examples{
+    data(readsG2_chrII)
+    data(readsM_chrII)
+    dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
+
+}
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org}
+Ricard Illa \email{ricard.illa@irbbarcelona.org},
+Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

@@ -80,16 +80,32 @@ setMethod(
 
 #' Accessors to a NucDyn object
 #'
-#' @rdname nucdyn-accessors
+#' @name nucdyn-accessors
 #' @param x a NucDyn object
 #' @return
 #'   * {set.a} `GRangesList` with the reads paired from ref1
 #'   * {set.b} `GRangesList` with the reads paired from ref2
 #'
+#' @examples
+#'     data(readsG2_chrII)
+#'     data(readsM_chrII)
+#'     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
+#'     set.a(dyn)
+#'     set.b(dyn)
+#'
+NULL
+
+#' @export
+#' @rdname nucdyn-accessors
 setGeneric("set.a", function (x) standardGeneric("set.a"))
 
+#' @export
 #' @rdname nucdyn-accessors
 setGeneric("set.b", function (x) standardGeneric("set.b"))
 
+#' @rdname nucdyn-accessors
 setMethod("set.a", "NucDyn", function (x) x@set.a)
+
+#' @rdname nucdyn-accessors
 setMethod("set.b", "NucDyn", function (x) x@set.b)
+

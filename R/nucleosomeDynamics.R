@@ -72,7 +72,13 @@
 #'
 #' @return An object of class [NucDyn-class].
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}
+#' @examples
+#'     data(readsG2_chrII)
+#'     data(readsM_chrII)
+#'     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
+#'
+#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org},
+#'         Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @keywords manip
 #' @rdname nucleosomeDynamics
 #' @export nucleosomeDynamics

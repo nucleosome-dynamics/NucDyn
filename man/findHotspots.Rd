@@ -6,23 +6,34 @@
 \alias{findHotspots,NucDyn-method}
 \title{Find hotspots in a NucDyn object.}
 \usage{
-findHotspots(dyn, wins = 10000, indel.threshold = NULL,
-  shift.threshold = NULL, mc.cores = 1)
+findHotspots(dyn, nuc, wins = 10000, indel.threshold = NULL,
+  shift.threshold = NULL, indel.nreads = NULL, shift.nreads = NULL,
+  mc.cores = 1)
 
-\S4method{findHotspots}{NucDyn}(dyn, wins = 10000,
-  indel.threshold = NULL, shift.threshold = NULL, mc.cores = 1)
+\S4method{findHotspots}{NucDyn}(dyn, nuc, wins = 10000,
+  indel.threshold = NULL, shift.threshold = NULL,
+  indel.nreads = NULL, shift.nreads = NULL, mc.cores = 1)
 }
 \arguments{
 \item{dyn}{NucDyn object with the dynamic to analyze.}
 
+\item{nuc}{list of two \code{GRanges} objects containing the nucleosome calls of
+experiment 1 and experiment 2.}
+
 \item{wins}{Size of the window in base-pairs where the relative scores are
 computed}
 
-\item{indel.threshold}{Maximum p-value for an insertion or delition hotspot
-to be considered significant.}
+\item{indel.threshold}{Maximum p-value for an \code{INCLUSION} or \code{EVICTION}
+hotspot to be considered significant.}
 
-\item{shift.threshold}{Maximum p-value for shift hotspot to be considered
-significant.}
+\item{shift.threshold}{Maximum p-value for a \code{SHIFT +} or \code{SHIFT -}
+hotspot to be considered significant.}
+
+\item{indel.nreads}{Minimum number of reads in an \code{INCLUSION} or \code{EVICTION}
+hotspot.}
+
+\item{shift.nreads}{Minimum number of reads in a \code{SHIFT +} or \code{SHIFT -}
+hotspot.}
 
 \item{mc.cores}{If \code{parallel} support, the number of cores available. This
 option is only used if the provided sets are from more than one
@@ -41,7 +52,16 @@ nucleosomes).
 \description{
 Find hotspots from a given nucleosome dynamics.
 }
+\examples{
+    data(readsG2_chrII)
+    data(readsM_chrII)
+    data(nuc_chrII)
+    dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
+    findHotspots(dyn, nuc_chrII)
+
+}
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org}
+Ricard Illa \email{ricard.illa@irbbarcelona.org},
+Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

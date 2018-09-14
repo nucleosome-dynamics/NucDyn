@@ -13,25 +13,25 @@
 #'
 #' @param dyn `NucDyn` object with the dynamic to plot.
 #' @param plot.range Range from the `NucDyn` object to plot. If not specified,
-#'   the whole set will be plotted. If the dynamics contains more than one
-#'   chromosome, they will appear concatenated in the plot.
+#'     the whole set will be plotted. If the dynamics contains more than one
+#'     chromosome, they will appear concatenated in the plot.
 #' @param chr Chromosome from the `NucDyn` object to plot. If not specified,
-#'   all chromosomes will appear plotted concatenated.
+#'     all chromosomes will appear plotted concatenated.
 #' @param dyn.name Name to be given to the dyanamics that will be displayed in
-#'   the plot.
+#'     the plot.
 #' @param expA.name Name to be given to the first data set of the dyanamics
-#'   that will be displayed in the plot.
+#'     that will be displayed in the plot.
 #' @param expB.name Name to be given to the second data set of the dyanamics
-#'   that will be displayed in the plot.
+#'     that will be displayed in the plot.
 #' @param norm.factor Normalization factor between ref1 and ref2. Use it to
-#'   visualize both coverages profiles on a similar scale if one of them has a
-#'   significantly higher coverage.
+#'     visualize both coverages profiles on a similar scale if one of them has
+#'     a significantly higher coverage.
 #' @param \dots Other parameters passed to [graphics::plot()] function.
 #'
 #' @return Void
 #'
 #' @author Oscar Flores \email{oflores@@mmb.pcb.ub.es}, Ricard Illa
-#'   \email{ricard.illa@@irbbarcelona.org}
+#'     \email{ricard.illa@@irbbarcelona.org}
 #' @rdname plotDynamics
 #' @keywords hplot
 #

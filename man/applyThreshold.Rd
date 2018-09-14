@@ -4,22 +4,27 @@
 \alias{applyThreshold}
 \title{Apply threshold}
 \usage{
-applyThreshold(hs, indel.thresh, shift.thresh)
+applyThreshold(hs, indel.thresh, shift.thresh, indel.nreads, shift.nreads)
 }
 \arguments{
 \item{hs}{Hotspots returned by findHotspots.}
 
-\item{indel.thresh}{threshold for the indels}
+\item{indel.thresh}{threshold for the indels.}
 
-\item{shift.thresh}{threshold fo the shifts}
+\item{shift.thresh}{threshold for the shifts.}
+
+\item{indel.nreads}{minimum number of reads for the indels.}
+
+\item{shift.nreads}{minimum number of reads for the shifts.}
 }
 \value{
-a hotspots \code{data.frame} filered by the thresholds
+a hotspots \code{data.frame} filered by the thresholds.
 }
 \description{
 Apply an indel threshold and a shift threshold to the hotspots
 }
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org}
+Ricard Illa \email{ricard.illa@irbbarcelona.org},
+Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

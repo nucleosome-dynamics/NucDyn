@@ -6,8 +6,7 @@
 #' pointing out these regions with relevant changes in the individual position
 #' of the nucleosomes.
 #'
-#' There are 4 types of basic hotspots, plus their combinations. Basic ones
-#' are:
+#' There are 4 types of basic hotspots:
 #'
 #' * Translational movement of nucleosomes, downstream (+).
 #' * Translational movement of nucleosomes, upstream (-).
@@ -38,12 +37,18 @@
 #' upstream (25/5 == 5 > 2), both hotspot will be annotated as "SHIFT".
 #'
 #' @param dyn NucDyn object with the dynamic to analyze.
+#' @param nuc list of two `GRanges` objects containing the nucleosome calls of 
+#'   experiment 1 and experiment 2. 
 #' @param wins Size of the window in base-pairs where the relative scores are
 #'   computed
-#' @param indel.threshold Maximum p-value for an insertion or delition hotspot
-#'   to be considered significant.
-#' @param shift.threshold Maximum p-value for shift hotspot to be considered
-#'   significant.
+#' @param indel.threshold Maximum p-value for an `INCLUSION` or `EVICTION` 
+#'   hotspot to be considered significant.
+#' @param shift.threshold Maximum p-value for a `SHIFT +` or `SHIFT -`
+#'   hotspot to be considered significant.
+#' @param indel.nreads Minimum number of reads in an `INCLUSION` or `EVICTION` 
+#'   hotspot.
+#' @param shift.nreads Minimum number of reads in a `SHIFT +` or `SHIFT -`
+#'   hotspot.
 #' @param mc.cores If `parallel` support, the number of cores available. This
 #'   option is only used if the provided sets are from more than one
 #'   chromosome.
@@ -56,26 +61,35 @@
 #' * type: The type of the hotspot (as listed above).
 #' * nreads: Number of reads involved in the hotspot.
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}
+#' @examples
+#'     data(readsG2_chrII)
+#'     data(readsM_chrII)
+#'     data(nuc_chrII)
+#'     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
+#'     findHotspots(dyn, nuc_chrII)
+#'
+#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}, 
+#'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @keywords manip
 #' @rdname findHotspots
 #' @export findHotspots
 #'
 setGeneric(
     "findHotspots",
-    function (dyn, wins=10000, indel.threshold=NULL, shift.threshold=NULL,
-              mc.cores=1)
+    function (dyn, nuc, wins=10000, indel.threshold=NULL, shift.threshold=NULL,
+              indel.nreads=NULL, shift.nreads=NULL, mc.cores=1)
         standardGeneric("findHotspots")
 )
 
 #' @rdname findHotspots
 #' @importMethodsFrom GenomeInfoDb seqnames
 #' @importMethodsFrom IRanges ranges
+#' @importFrom GenomicRanges findOverlaps
 setMethod(
     "findHotspots",
     signature(dyn="NucDyn"),
-    function (dyn, wins=10000, indel.threshold=NULL, shift.threshold=NULL,
-              mc.cores=1)
+    function (dyn, nuc, wins=10000, indel.threshold=NULL, shift.threshold=NULL,
+              indel.nreads=NULL, shift.nreads=NULL, mc.cores=1)
     {
         setA <- set.a(dyn)
         setB <- set.b(dyn)
@@ -109,10 +123,87 @@ setMethod(
                             chr    = character())
        }
 
-        if (!is.null(indel.threshold) & !is.null(shift.threshold)) {
-            hs <- applyThreshold(hs, indel.threshold, shift.threshold)
+        hs_gr <- GRanges(hs$chr,IRanges(start=hs$start, end=hs$end), 
+                         peak=hs$peak, nreads=hs$nreads, score=hs$score, 
+                         type=hs$type)
+
+        hs_shiftp <- hs_gr[grep("SHIFT \\+", hs_gr$type)] 
+        hs_shiftm <- hs_gr[grep("SHIFT -", hs_gr$type)] 
+
+        #Project shift to dyad
+        nuc1 <- nuc[[1]]
+
+        ovlp_nuc1p <- as.data.frame(findOverlaps(nuc1, hs_shiftp))       
+        ovlp_nuc1p$start <- start(nuc1[ovlp_nuc1p$queryHits])
+        ovlp_nuc1p <- lapply(split(ovlp_nuc1p, ovlp_nuc1p$subjectHits),
+           function(x) {
+              tmp_nuc = nuc1[x$queryHits[which.min(x$start)]]
+              if(hs_shiftp[x$subjectHits[1]]$type=="SHIFT +1"){
+                 tmp_nuc = nuc1[x$queryHits[which.max(x$start)]]
+                 tmp_shf = hs_shiftp[x$subjectHits[which.max(x$start)]]
+              } else {
+                 tmp_nuc = nuc1[x$queryHits[which.min(x$start)]]
+                 tmp_shf = hs_shiftp[x$subjectHits[which.min(x$start)]]
+              }
+              data.frame(chr    = as.character(seqnames(tmp_nuc)),
+                         start  = as.numeric(start(tmp_nuc)),
+                         end    = as.numeric(end(tmp_nuc)),
+                         peak   = tmp_shf$peak, 
+                         nreads = tmp_shf$nreads,
+                         score  = tmp_shf$score,
+                         type   = "SHIFT +") #tmp_shf$type)
+           })
+
+        hs_shiftp_nuc <- do.call(rbind, ovlp_nuc1p)
+                   
+        ovlp_nuc1m <- as.data.frame(findOverlaps(nuc1, hs_shiftm))        
+        ovlp_nuc1m$end <- end(nuc1[ovlp_nuc1m$queryHits])
+        ovlp_nuc1m <- lapply(split(ovlp_nuc1m, ovlp_nuc1m$subjectHits),
+           function(x) {
+              if(hs_shiftm[x$subjectHits[1]]$type=="SHIFT -1"){
+                 tmp_nuc = nuc1[x$queryHits[which.min(x$end)]]
+                 tmp_shf = hs_shiftm[x$subjectHits[which.min(x$end)]]
+              } else {
+                 tmp_nuc = nuc1[x$queryHits[which.max(x$end)]]
+                 tmp_shf = hs_shiftm[x$subjectHits[which.max(x$end)]]
+              }
+              data.frame(chr    = as.character(seqnames(tmp_nuc)),
+                         start  = as.numeric(start(tmp_nuc)),
+                         end    = as.numeric(end(tmp_nuc)),
+                         peak   = tmp_shf$peak,
+                         nreads = tmp_shf$nreads,
+                         score  = tmp_shf$score,
+                         type   = "SHIFT -") #tmp_shf$type)
+           })
+        
+        hs_shiftm_nuc <- do.call(rbind, ovlp_nuc1m)
+        
+        #append indels
+        hs_in <- hs[hs$type=="INCLUSION",]
+        hs_del <- hs[hs$type=="EVICTION",]
+
+        hs_out <- rbind(hs_in, hs_del, hs_shiftp_nuc, hs_shiftm_nuc)                
+
+        #apply thresholds
+        if (!is.null(indel.threshold) & !is.null(shift.threshold) &
+            !is.null(indel.nreads) & !is.null(shift.nreads) ) {
+            hs_out <- applyThreshold(hs_out, indel.thresh=indel.threshold, 
+                                     shift.thresh=shift.threshold,
+                                     indel.nreads=indel.nreads, 
+                                     shift.nreads=shift.nreads)
         }
-        hs
+        #remove overlappyng shift + and -
+        id_hs <- paste(hs_out$chr, hs_out$start, hs_out$end, sep="_")
+        is.sp <- hs_out$type == "SHIFT +"
+        is.sm <- hs_out$type == "SHIFT -"
+        
+        rm_sp <- id_hs[is.sp][id_hs[is.sp]%in%id_hs[is.sm]]
+        rm_sm <- id_hs[is.sm][id_hs[is.sm]%in%id_hs[is.sp]]
+        rm_shift <- c(which(id_hs %in% rm_sp), which(id_hs %in% rm_sm))
+        if(length(rm_shift)>0){
+           hs_out <- hs_out[-c(which(id_hs%in%rm_sp), which(id_hs%in%rm_sm)),]
+        }
+        return(hs_out)
     }
 )
 
@@ -268,7 +359,8 @@ setMethod(
 #'     pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)
 #'
 #' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}, 
-#'     Diana Buitrago, Diego Gallego
+#'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}, 
+#'     Diego Gallego
 #' @keywords manip
 #' @export findPVals
 #'
@@ -292,13 +384,20 @@ findPVals <- function (x, y, wins=10000)
     ###########################################################################
 
     covs <- .getEqualCovs(list(dyn[["right.shifts"]][[1]],
-                               dyn[["left.shifts"]][[1]]))
+                               dyn[["right.shifts"]][[2]]))
     diff <- do.call(`-`, covs)
-    shifts <- .hsFromCov(diff, pvals, c("SHIFT +", "SHIFT -"))
+    shiftsp <- .hsFromCov(diff, pvals, c("SHIFT +1", "SHIFT +2"))
 
     ###########################################################################
 
-    hs <- rbind(indels, shifts)
+    covs <- .getEqualCovs(list(dyn[["left.shifts"]][[1]],
+                               dyn[["left.shifts"]][[2]]))
+    diff <- do.call(`-`, covs)
+    shiftsm <- .hsFromCov(diff, pvals, c("SHIFT -1", "SHIFT -2"))
+
+    ###########################################################################
+
+    hs <- rbind(indels, shiftsp, shiftsm)
     hs[order(hs$start), ]
 }
 
@@ -307,19 +406,23 @@ findPVals <- function (x, y, wins=10000)
 #' Apply an indel threshold and a shift threshold to the hotspots
 #'
 #' @param hs Hotspots returned by findHotspots.
-#' @param indel.thresh threshold for the indels
-#' @param shift.thresh threshold fo the shifts
+#' @param indel.thresh threshold for the indels.
+#' @param shift.thresh threshold for the shifts.
+#' @param indel.nreads minimum number of reads for the indels.
+#' @param shift.nreads minimum number of reads for the shifts.
 #'
-#' @return a hotspots `data.frame` filered by the thresholds
+#' @return a hotspots `data.frame` filered by the thresholds.
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}
+#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}, 
+#'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @keywords manip
 #'
-applyThreshold <- function (hs, indel.thresh, shift.thresh)
+applyThreshold <- function(hs, indel.thresh, shift.thresh, 
+                           indel.nreads, shift.nreads)
 {
     is.indel <- hs$type == "EVICTION" | hs$type == "INCLUSION"
     is.shift <- hs$type == "SHIFT +"  | hs$type == "SHIFT -"
-    sign.indel <- is.indel & hs$score <= indel.thresh
-    sign.shift <- is.shift & hs$score <= indel.thresh
+    sign.indel <- is.indel & hs$score <= indel.thresh & hs$nreads >= indel.nreads
+    sign.shift <- is.shift & hs$score <= shift.thresh & hs$nreads >= shift.nreads
     hs[sign.indel | sign.shift, ]
 }
