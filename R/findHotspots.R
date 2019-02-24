@@ -312,7 +312,7 @@ setMethod(
 
 #' @importFrom plyr rbind.fill
 #' @importMethodsFrom nucleR filterFFT
-.hsFromCov <- function(x, pvals, names)
+.hsFromCov <- function(x, pvals, names, mc.cores=1)
 {
     by.sign <- .splitBySign(x)
     filtered <- mclapply(by.sign,
