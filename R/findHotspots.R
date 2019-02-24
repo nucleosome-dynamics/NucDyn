@@ -111,7 +111,7 @@ setMethod(
         }
 
        if (length(chrs)) {
-           hsLs <- .xlapply(chrs, chrIter)
+           hsLs <- .xlapply(chrs, chrIter, mc.cores=mc.cores)
            hs <- do.call("rbind", hsLs)
        } else {
            hs <- data.frame(start  = integer(),
@@ -135,7 +135,7 @@ setMethod(
 
         ovlp_nuc1p <- as.data.frame(findOverlaps(nuc1, hs_shiftp))       
         ovlp_nuc1p$start <- start(nuc1[ovlp_nuc1p$queryHits])
-        ovlp_nuc1p <- lapply(split(ovlp_nuc1p, ovlp_nuc1p$subjectHits),
+        ovlp_nuc1p <- mclapply(split(ovlp_nuc1p, ovlp_nuc1p$subjectHits),
            function(x) {
               tmp_nuc = nuc1[x$queryHits[which.min(x$start)]]
               if(hs_shiftp[x$subjectHits[1]]$type=="SHIFT +1"){
@@ -152,13 +152,13 @@ setMethod(
                          nreads = tmp_shf$nreads,
                          score  = tmp_shf$score,
                          type   = "SHIFT +") #tmp_shf$type)
-           })
+           }, mc.cores=mc.cores)
 
         hs_shiftp_nuc <- do.call(rbind, ovlp_nuc1p)
                    
         ovlp_nuc1m <- as.data.frame(findOverlaps(nuc1, hs_shiftm))        
         ovlp_nuc1m$end <- end(nuc1[ovlp_nuc1m$queryHits])
-        ovlp_nuc1m <- lapply(split(ovlp_nuc1m, ovlp_nuc1m$subjectHits),
+        ovlp_nuc1m <- mclapply(split(ovlp_nuc1m, ovlp_nuc1m$subjectHits),
            function(x) {
               if(hs_shiftm[x$subjectHits[1]]$type=="SHIFT -1"){
                  tmp_nuc = nuc1[x$queryHits[which.min(x$end)]]
@@ -174,7 +174,7 @@ setMethod(
                          nreads = tmp_shf$nreads,
                          score  = tmp_shf$score,
                          type   = "SHIFT -") #tmp_shf$type)
-           })
+           }, mc.cores=mc.cores)
         
         hs_shiftm_nuc <- do.call(rbind, ovlp_nuc1m)
         
@@ -315,11 +315,12 @@ setMethod(
 .hsFromCov <- function(x, pvals, names)
 {
     by.sign <- .splitBySign(x)
-    filtered <- lapply(by.sign,
+    filtered <- mclapply(by.sign,
                        .catcher(filterFFT),
                        pcKeepComp=0.01,
-                       useOptim=TRUE)
-    rans <- lapply(filtered, .getHsRanges)
+                       useOptim=TRUE, 
+                       mc.cores=mc.cores)
+    rans <- mclapply(filtered, .getHsRanges, mc.cores=mc.cores)
     dfs <- mapply(.ran2df,
                   rans,
                   filtered,
