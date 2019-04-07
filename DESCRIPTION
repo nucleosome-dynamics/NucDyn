@@ -3,8 +3,8 @@ Type: Package
 Title: Nucleosome Dynamics
 Version: 0.99.0
 Date: 2018-02-13
-Author: Ricard Illa
-Maintainer: Ricard Illa <ricard.illa@irbbarcelona.org>
+Author: Ricard Illa, Diana Buitrago
+Maintainer: Diana Buitrago <diana.buitrago@irbbarcelona.org>
 Description: Nucleosome occupancy dynamic comparison between two reference states.
 License: file LICENSE
 Depends: R (>= 3.5), methods
