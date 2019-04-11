@@ -1,0 +1,182 @@
+---
+title: "Comparison of nucleosome dynamics using the NucDyn package"
+author:
+  - name: Diana Buitrago, Ricard Illa
+affiliation:
+  - Institute for Research in Biomedicine
+date: "`r Sys.Date()`"
+output: BiocStyle::pdf_document
+vignette: >
+  %\VignetteIndexEntry{NucleosomeDynamics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+library(NucDyn)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+\Biocpkg{NucDyn} is a package designed to compare nucleosome positioning 
+between two different cell conditions using the mapped reads from MNase-seq 
+experiments. It identifies two different types of nucleosome rearrengements, 
+working at the fragment level:
+
+* Occupancy differences: nucleosome inclusions and evictions
+* Nucleosome displacements: upstream or downstream shifts
+
+The package requires preliminary detection of nucleosome positions from the MNase-seq data sets, which can be obtained using \Biocpkg{nucleR}.
+
+The main functions of \Biocpkg{NucDyn} are:
+  
+* `nucleosomeDynamics` finds pairs of fragments between the two experiments, corresponding to shifts, and detects fragments removed and inserted.
+* `findHotspots` groups all the fragments corresponding to a nucleosome change and scores the detected hotspots.
+
+For more details about the functions arguments and options refer to the
+\Biocpkg{NucDyn} manual.
+
+
+# Package content
+
+
+
+## Sample Data
+
+The examples analysed in this vignette were obtained from a study where MNaseSeq experiments for *S. cerevisiae* in G2 and M cell cycle phases were performed 
+[@deniz_nucleosome_2016]. Sequencing reads retrieved from
+ENA repository under accession
+PRJEB6970 were mapped to the budding yeast genome (sacCer3 version) using Bowtie
+and imported into \R{} using \Biocpkg{ShortRead}.
+We provide, within \Biocpkg{NucDyn} package, reads mapped to chromosome II 
+from these experiments. 
+
+
+
+## Method
+
+\Biocpkg{NucDyn}  allows comparison of two diferent
+MNase-seq experiments (Condition 1 and Condition 2) and detects local changes
+such as:
+
+* **Shift -**, were the occupancy is shifted upstream on Condition 2
+  relative to Condition 1.
+* **Shift +**, were the occupancy is shifted downstream on Condition
+  2 relative to Condition 1.
+* **Inclusion**, where the nucleosome occupancy is significantly increased.
+* **Eviction**, where the nucleosome occupancy is significantly decreased.
+
+\Biocpkg{NucDyn} identifies those changes working at read-level.
+Its pipeline sequentially pairs fragments of one experiment
+with fragments of the second experiment to remove those that are not informative, 
+i.e. that did not change between the two conditions but only represent differences in 
+MNase efficiency or PCR duplicates.
+First, all reads that are identical on both experiments are discarted. Then,
+the reads that either start or end at the same position are discarted as well.
+Next, the reads from one experiment whose range is completely contained by the
+range of a read in the other experiment, are paired and removed too.
+
+With the informative fragments, \Biocpkg{NucDyn} then pairs reads from one experiment to reads in the other
+experiment whose center is shifted either upstream or downstream
+relative to each other. In an attempt to find the best possible combination of
+pairs, a dynamic programming algorithm is used.
+It is defined with the following conditions:
+
+1. The largest possible number of pairs is found.
+2. The centers of the paired reads are as close as possible.
+3. Reads whose center is futher apart than a given distance (by default 74 bp, 
+i.e. half of a nucleosome length) are never paired.
+
+To achieve that, the dynamic programming algorithm works in the following way:
+
+1. Gaps are highly penalized (to achieve maximum number of pairs).
+2. Pairs are given a score that is inversely proportional to the centers
+   distance (to prioratize close pairs).
+3. Pairs whose centers are at a distance larger than 74 bp. are given a 
+   score of -Infinity so that it can never happen.
+
+Once the pairs of fragments corresponding to shifts have been found, 
+accumulations of them are considered shift hotspots.
+
+In order to identify significant changes in occupancy (insertions and
+deletions), the coverage of the reads in both experiments is used.
+First a normalized z score accross the genome is calculated, assuming a
+hypergeometric distrubition. This score is normalized on a given window 
+(by default 10000 bp.). In this way, coverage fluctuations accross big segments of the
+genome are taken into account and locally significant differences are detected.
+Positive peaks of that z score mean that the coverage of the Experiment 1 is
+significantly higher than the coverage of the Experiment 2, and therefore it is
+considered a deletion. Similarly, negative z score peaks represent regions
+where the coverage of the Experiment 2 is significantly higher and therefore
+classified as insertions.
+
+Finally, the \Biocpkg{NucDyn} pipeline scores the hotspots found. With this intention,
+a p-value is calculated for each point on the sequence, that accounts for
+statistically significant differences of coverage in a given window (10000 bp. by default).
+Fisher's test comparing reads from the two experiments at the given position
+is calculated.  The score given to each hotspot corresponds to the p-value 
+at its peak position. Then, a
+threshold is applied to report only the more relevant hotspots.
+
+## Usage
+
+Using the MNase-seq data described above, we will explain how to detect changes in nucleosomes 
+between G2 and M cell cycle phases. First we need to load the library and the sample mapped reads in the two phases:
+
+```{r load}
+library(NucDyn)
+data(readsG2_chrII)
+data(readsM_chrII)
+
+```
+Data are in GRanges format from the \Biocpkg{GenomicRanges} package. BAM files containing
+aligened reads can by imported in R using `scanBam` function from \Biocpkg{Rsamtools} package
+and then transformed to GRanges format.
+
+```{r head}
+head(readsG2_chrII)
+
+```
+
+Now we will use \Biocpkg{NucDyn} to obtain fragment shifts (+ or -), inclusions and evictions between G2 and M:
+
+
+```{r nucDyn}
+dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
+
+print(dyn)
+```
+
+The output contains all original reads as well as the different pairings identified between the two experiments: identical, with same start, same end, contained, shifts, indels or unpaired reads. Each group is a GRanges object, for instance to obtain all reads identified as left.shifts from G2 (setA) to M (setB):
+
+```{r indels}
+head(dyn@set.a[["left.shifts"]])
+head(dyn@set.b[["left.shifts"]])
+
+```
+
+In order to group the paired reads and detect significant changes, we need previously identified nucleosome positions. We will load the precomputed nuclesome calls obtained with \Biocpkg{nucleR}:
+
+```{r nucleR}
+data(nuc_chrII)
+head(nuc_chrII)
+
+```
+
+Now we can use the nuclesome positions in the two experiments to obtain the hotspots:
+
+```{r result}
+hs <- findHotspots(dyn, nuc_chrII)
+head(hs)
+
+```
+
+```{r end}
+sessionInfo()
+
+```
+
+## References
+
