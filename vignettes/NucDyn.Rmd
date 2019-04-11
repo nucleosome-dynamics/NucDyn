@@ -152,8 +152,8 @@ print(dyn)
 The output contains all original reads as well as the different pairings identified between the two experiments: identical, with same start, same end, contained, shifts, indels or unpaired reads. Each group is a GRanges object, for instance to obtain all reads identified as left.shifts from G2 (setA) to M (setB):
 
 ```{r indels}
-head(dyn@set.a[["left.shifts"]])
-head(dyn@set.b[["left.shifts"]])
+head(set.a(dyn)[["left.shifts"]])
+head(set.b(dyn)[["left.shifts"]])
 
 ```
 
