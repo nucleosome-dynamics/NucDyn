@@ -77,7 +77,7 @@
 #'     data(readsM_chrII)
 #'     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org},
+#' @author Ricard Illa,
 #'         Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @keywords manip
 #' @rdname nucleosomeDynamics

@@ -27,8 +27,7 @@ coverages. Works by windows.
 
 }
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org},
-Diana Buitrago \email{diana.buitrago@irbbarcelona.org},
-Diego Gallego
+Ricard Illa, Diego Gallego,
+Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

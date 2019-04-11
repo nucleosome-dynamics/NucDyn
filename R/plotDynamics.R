@@ -30,8 +30,8 @@
 #'
 #' @return Void
 #'
-#' @author Oscar Flores \email{oflores@@mmb.pcb.ub.es}, Ricard Illa
-#'     \email{ricard.illa@@irbbarcelona.org}
+#' @author Oscar Flores, Ricard Illa
+#'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @rdname plotDynamics
 #' @keywords hplot
 #

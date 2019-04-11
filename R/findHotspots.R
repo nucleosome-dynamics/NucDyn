@@ -66,9 +66,9 @@
 #'     data(readsM_chrII)
 #'     data(nuc_chrII)
 #'     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
-#'     findHotspots(dyn, nuc_chrII)
+#'     hs <- findHotspots(dyn, nuc_chrII)
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}, 
+#' @author Ricard Illa,   
 #'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @keywords manip
 #' @rdname findHotspots
@@ -359,9 +359,9 @@ setMethod(
 #'     data(sample_chrII)
 #'     pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}, 
-#'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}, 
-#'     Diego Gallego
+#' @author Ricard Illa, Diego Gallego,  
+#'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
+#'
 #' @keywords manip
 #' @export findPVals
 #'
@@ -414,7 +414,7 @@ findPVals <- function (x, y, wins=10000)
 #'
 #' @return a hotspots `data.frame` filered by the thresholds.
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}, 
+#' @author Ricard Illa, 
 #'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @keywords manip
 #'

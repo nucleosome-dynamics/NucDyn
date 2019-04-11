@@ -24,7 +24,7 @@ a hotspots \code{data.frame} filered by the thresholds.
 Apply an indel threshold and a shift threshold to the hotspots
 }
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org},
+Ricard Illa,
 Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

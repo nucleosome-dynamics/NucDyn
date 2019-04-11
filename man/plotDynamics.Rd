@@ -34,8 +34,8 @@ that will be displayed in the plot.}
 that will be displayed in the plot.}
 
 \item{norm.factor}{Normalization factor between ref1 and ref2. Use it to
-visualize both coverages profiles on a similar scale if one of them has a
-significantly higher coverage.}
+visualize both coverages profiles on a similar scale if one of them has
+a significantly higher coverage.}
 }
 \value{
 Void
@@ -54,7 +54,7 @@ will appear as a small coverage profile at the bottom part of the plot
 (insertions in green and deletions in red).
 }
 \author{
-Oscar Flores \email{oflores@mmb.pcb.ub.es}, Ricard Illa
-\email{ricard.illa@irbbarcelona.org}
+Oscar Flores, Ricard Illa
+Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{hplot}

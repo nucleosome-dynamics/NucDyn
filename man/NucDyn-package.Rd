@@ -21,5 +21,5 @@ License: \tab BSD_2_clause \cr
 }
 }
 \author{
-Ricard Illa, Maintainer: Ricard Illa \href{mailto:ricard.illa@irbbarcelona.org}{ricard.illa@irbbarcelona.org}
+Ricard Illa, Maintainer: Diana Buitrago \href{mailto:diana.buitrago@irbbarcelona.org}{diana.buitrago@irbbarcelona.org}
 }

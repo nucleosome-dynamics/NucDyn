@@ -61,6 +61,6 @@ not be present if in the call of \code{nucleosomeDynamics}, \code{equalSize=TRUE
 \code{\link[=nucleosomeDynamics]{nucleosomeDynamics()}}
 }
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org}
+Ricard Illa, Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

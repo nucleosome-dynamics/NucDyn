@@ -61,7 +61,7 @@ Find hotspots from a given nucleosome dynamics.
 
 }
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org},
+Ricard Illa,
 Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

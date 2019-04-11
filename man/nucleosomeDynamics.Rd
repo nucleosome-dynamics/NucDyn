@@ -113,7 +113,7 @@ than less closer pairs) and a penalty of \code{-Inf} for distances higher than
 
 }
 \author{
-Ricard Illa \email{ricard.illa@irbbarcelona.org},
+Ricard Illa,
 Diana Buitrago \email{diana.buitrago@irbbarcelona.org}
 }
 \keyword{manip}

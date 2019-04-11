@@ -13,6 +13,8 @@ Suggests: BiocStyle, knitr, rmarkdown
 LazyLoad: yes
 LinkingTo: Rcpp
 VignetteBuilder: knitr
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Roxygen: list(markdown = TRUE)
 biocViews: Sequencing, Genetics, MNaseSeq
+Encoding: UTF-8 
+

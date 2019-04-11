@@ -17,7 +17,7 @@
 #' @name NucDyn-package
 #' @aliases NucDyn-package
 #' @docType package
-#' @author Ricard Illa, Maintainer: Ricard Illa <ricard.illa@@irbbarcelona.org>
+#' @author Ricard Illa, Maintainer: Diana Buitrago <diana.buitrago@@irbbarcelona.org>
 #'
 #' @importFrom methods new
 #' @useDynLib NucDyn

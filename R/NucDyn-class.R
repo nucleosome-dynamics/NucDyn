@@ -43,7 +43,7 @@
 #' @slot set.a `GRangesList` containing the `nucleosomeDynamics` of ref1
 #' @slot set.b `GRangesList` containing the `nucleosomeDynamics` of ref2
 #'
-#' @author Ricard Illa \email{ricard.illa@@irbbarcelona.org}
+#' @author Ricard Illa, Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @seealso [nucleosomeDynamics()]
 #' @keywords manip
 #' @importClassesFrom GenomicRanges GRangesList
