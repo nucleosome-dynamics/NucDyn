@@ -17,4 +17,4 @@ RoxygenNote: 6.1.1
 Roxygen: list(markdown = TRUE)
 biocViews: Sequencing, Genetics, MNaseSeq
 Encoding: UTF-8 
-
+URL: http://mmb.irbbarcelona.org/NucleosomeDynamics/help/method#nd

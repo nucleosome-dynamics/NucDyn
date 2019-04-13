@@ -57,7 +57,7 @@ Find hotspots from a given nucleosome dynamics.
     data(readsM_chrII)
     data(nuc_chrII)
     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
-    findHotspots(dyn, nuc_chrII)
+    hs <- findHotspots(dyn, nuc_chrII)
 
 }
 \author{

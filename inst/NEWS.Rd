@@ -1,3 +1,7 @@
-# NucDyn 0.99.0
+\name{NEWS}
+\title{News for Package \pkg{NucDyn}}
+\encoding{UTF-8}
 
-* Added a `NEWS.md` file to track changes to the package.
+\section{Version }{\itemize{
+\item
+}}
