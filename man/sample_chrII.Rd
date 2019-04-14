@@ -11,7 +11,7 @@ data(sample_chrII)
 data(sample_chrII)
 }
 \value{
-Nucleosome coverage in S. cerevisiae chrII for G2 and M
+Nucleosome coverage in S. cerevisiae chrII:1-400000 for G2 and M
 }
 \description{
 Data from a MNaseSeq experiment in yeast in the following mitosis phases:

@@ -2,6 +2,7 @@
 \title{News for Package \pkg{NucDyn}}
 \encoding{UTF-8}
 
-\section{Version }{\itemize{
-\item
+\section{Version 0.99.1}{\itemize{
+\item 
+NucDyn submitted to Bioconductor.
 }}

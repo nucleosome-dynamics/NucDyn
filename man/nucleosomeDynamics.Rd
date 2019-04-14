@@ -109,7 +109,7 @@ than less closer pairs) and a penalty of \code{-Inf} for distances higher than
 \examples{
     data(readsG2_chrII)
     data(readsM_chrII)
-    dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
+    \donttest{dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)}
 
 }
 \author{

@@ -9,7 +9,7 @@
 data(readsM_chrII)
 }
 \value{
-MNase-seq mapped reads for S. cerevisiae chrII in M
+MNase-seq mapped reads for S. cerevisiae chrII:1-400000 in M
 }
 \description{
 Mapped reads from an MNaseSeq experiment for S. cerevisiae (sacCer3) in

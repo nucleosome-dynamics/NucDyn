@@ -65,8 +65,8 @@
 #'     data(readsG2_chrII)
 #'     data(readsM_chrII)
 #'     data(nuc_chrII)
-#'     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
-#'     hs <- findHotspots(dyn, nuc_chrII)
+#'     \donttest{dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)}
+#'     \donttest{hs <- findHotspots(dyn, nuc_chrII)}
 #'
 #' @author Ricard Illa,   
 #'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}

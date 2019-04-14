@@ -89,9 +89,9 @@ setMethod(
 #' @examples
 #'     data(readsG2_chrII)
 #'     data(readsM_chrII)
-#'     dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)
-#'     set.a(dyn)
-#'     set.b(dyn)
+#'     \donttest{dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)}
+#'     \donttest{set.a(dyn)}
+#'     \donttest{set.b(dyn)}
 #'
 NULL
 
