@@ -1,7 +1,7 @@
 Package: NucDyn
 Type: Package
 Title: Nucleosome Dynamics
-Version: 0.99.1
+Version: 0.99.2
 Date: 2018-02-13
 Author: Ricard Illa, Diana Buitrago
 Maintainer: Diana Buitrago <diana.buitrago@irbbarcelona.org>

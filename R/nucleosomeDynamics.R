@@ -73,8 +73,8 @@
 #' @return An object of class [NucDyn-class].
 #'
 #' @examples
-#'     data(readsG2_chrII)
-#'     data(readsM_chrII)
+#'     \donttest{data(readsG2_chrII)}
+#'     \donttest{data(readsM_chrII)}
 #'     \donttest{dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)}
 #'
 #' @author Ricard Illa,

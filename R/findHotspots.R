@@ -62,9 +62,9 @@
 #' * nreads: Number of reads involved in the hotspot.
 #'
 #' @examples
-#'     data(readsG2_chrII)
-#'     data(readsM_chrII)
-#'     data(nuc_chrII)
+#'     \donttest{data(readsG2_chrII)}
+#'     \donttest{data(readsM_chrII)}
+#'     \donttest{data(nuc_chrII)}
 #'     \donttest{dyn <- nucleosomeDynamics(setA=readsG2_chrII, setB=readsM_chrII)}
 #'     \donttest{hs <- findHotspots(dyn, nuc_chrII)}
 #'
@@ -356,8 +356,8 @@ setMethod(
 #' @return A `numeric` vector of p-values per base-pair.
 #'
 #' @examples
-#'     data(sample_chrII)
-#'     pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)
+#'     \donttest{data(sample_chrII)}
+#'     \donttest{pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)}
 #'
 #' @author Ricard Illa, Diego Gallego,  
 #'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
