@@ -23,7 +23,7 @@ coverages. Works by windows.
 }
 \examples{
     data(sample_chrII)
-    pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)
+    \donttest{pval <- findPVals(sample_chrII[[1]], sample_chrII[[2]], win=10000)}
 
 }
 \author{
