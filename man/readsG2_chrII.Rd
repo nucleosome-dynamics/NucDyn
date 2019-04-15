@@ -9,7 +9,7 @@
 data(readsG2_chrII)
 }
 \value{
-MNase-seq mapped reads for S. cerevisiae chrII:1-400000 in G2
+MNase-seq mapped reads for S. cerevisiae chrII:1-100000 in G2
 }
 \description{
 Mapped reads from an MNaseSeq experiment for S. cerevisiae (sacCer3) in

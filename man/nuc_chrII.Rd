@@ -10,7 +10,7 @@ one for each experiment}
 data(nuc_chrII)
 }
 \value{
-Nucleosome positions in S. cerevisiae chrII:1-400000 for G2 and M
+Nucleosome positions in S. cerevisiae chrII:1-100000 for G2 and M
 }
 \description{
 Nucleosome positions in S. cerevisiae (sacCer3) chrII, derived from

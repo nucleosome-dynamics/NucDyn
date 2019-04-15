@@ -9,7 +9,7 @@
 #'
 #' @format An object of class RangedData
 #'
-#' @return MNase-seq mapped reads for S. cerevisiae chrII:1-400000 in G2 
+#' @return MNase-seq mapped reads for S. cerevisiae chrII:1-100000 in G2 
 #'
 #' @references Deniz, 0., Flores, O., et al. (2016) Scientific Reports 6, 19729
 #' (\href{https://www.ebi.ac.uk/ena/data/view/PRJEB6970}{ENA: PRJEB6970})

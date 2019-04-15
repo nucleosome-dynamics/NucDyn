@@ -10,7 +10,7 @@
 #' @format An object of class list, containing two GRanges objects, 
 #'         one for each experiment
 #'
-#' @return Nucleosome positions in S. cerevisiae chrII:1-400000 for G2 and M
+#' @return Nucleosome positions in S. cerevisiae chrII:1-100000 for G2 and M
 #'
 #' @references Deniz, 0., Flores, O., et al. (2016) Scientific Reports 6, 19729
 #' (\href{https://www.ebi.ac.uk/ena/data/view/PRJEB6970}{ENA: PRJEB6970})
