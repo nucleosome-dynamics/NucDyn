@@ -1,6 +1,7 @@
 #' Sample chromosome II coverage data
 #'
-#' Data from a MNaseSeq experiment in S. cerevisiae (sacCer3) in the 
+#' List of 2 integer vectors containing nucleosome coverage data from 
+#' an MNase-seq experiment in chrII of S. cerevisiae (sacCer3) in the 
 #' following cell cycle phases: G2 and M
 #'
 #' @docType data

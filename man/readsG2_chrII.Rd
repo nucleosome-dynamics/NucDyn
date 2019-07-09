@@ -4,7 +4,7 @@
 \name{readsG2_chrII}
 \alias{readsG2_chrII}
 \title{Sample reads from MNase-seq G2 cells in yeast}
-\format{An object of class RangedData}
+\format{An object of class GRanges}
 \usage{
 data(readsG2_chrII)
 }

@@ -3,7 +3,7 @@
 #'
 #' Nucleosome Dynamics allows detection of changes in the positions of
 #' nucleosomes at single read level between two reference nucleosome maps.
-#' Changes include shifts (moves), indels (insertions/deletions) of the
+#' Changes include shifts (displacements), indels (insertions/deletions) of the
 #' existing reads in initial state to match the reference final state.
 #'
 #' \tabular{ll}{

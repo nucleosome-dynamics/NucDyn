@@ -1,32 +1,32 @@
 #' Run nucleosomeDynamics to compare two sets.
 #'
-#' This is the main function in nucleosomeDynamics. It allows to compare the
+#' This is the main function in NucDyn. It allows to compare the
 #' reads of two NGS experiments of nucleosome coverage.
 #'
-#' The aim of NucleosomeDynamics is to infer "movement" (with direction and
+#' The aim of nucleosomeDynamics is to infer "movement" (with direction and
 #' magnitude) of the reads between two reference nucleosome maps. In contrast
-#' with a simple coverage difference, NucleosomeDynamics can tell how the reads
+#' with a simple coverage difference, nucleosomeDynamics can tell how the reads
 #' change between two different experiments. This is useful to analyze regions
 #' where fine regulatory role of the nucleosomes is suspected to happen.
 #'
 #' This method is based on the idea that reads in a reference state (ref1)
 #' should match those in another reference state (ref2) after applying a few
-#' shifts and/or indels. Both ref1 and ref2 need to be experimental nucleosome
-#' maps, either from the same sample with different conditions or from
-#' different samples.
+#' shifts and/or indels. Both ref1 and ref2 should be experimental nucleosome
+#' maps obtained from two experimental conditions.
 #'
-#' Then, we look for a match to each read in ref1 in another read of ref2 using
-#' a specific deffinition for what a "match" is. After all possible matches
-#' have been found, we set those reads apart and we look for matches in the
-#' remaining reads using a different definition for what a "match" is.  Then,
+#' The function looks for a match to each read in ref1 with a read in ref2 
+#' to discard those that correspond to unchanged nucleosomes between the two 
+#' experimental conditions (equal start and/or end). 
+#' After all possible matches have been found, those 
+#' reads are discarded and nucleosomeDynamics looks then for matches in the
+#' remaining reads, corresponding to relevant changes (shifts), using a dynamic 
+#' programming algorithm that minimizes distances between matched reads. Then,
 #' to account for the possibility that one sample has a higher coverage than
 #' the other, randomly picked reads are removed from the dataset with more
-#' reads to that they are the same size.  After this, all the remaining reads
+#' reads to obtain sets of the same size. After this, all the remaining reads
 #' are considered indels.
 #'
-#' Since they are tried sequentially, the definition of each type of match
-#' implies that the previous definitions tried are do not hold.  The different
-#' types of matches, in the order in which they are tried are:
+#' The different types of matches, in the order in which they are tried are:
 #'
 #' * Coinciding: Reads that start and end in the exact same position in both
 #'   sets.
@@ -38,10 +38,11 @@
 #'   other set. For a read to be contained by another, it has to start at a
 #'   more upstream position but end in a more downstream position than the
 #'   second read.
-#' * Shifts: Reads whose dyads are at a maximum distance of `maxDist` (default
-#'   is 74 bp.).
+#' * Shifts: Reads whose dyads are separated by less than a maximum distance 
+#'   of `maxDist`.
+#' * Indels: Reads present in only one experiment.
 #'
-#' If `equalSize=TRUE`, all reads are forced to the same size, to the match
+#' If `equalSize=TRUE`, all reads are forced to the same size, and the match
 #' types "Same start", "Same end" and "Contained" do not apply.
 #'
 #' In an attempt to find the optimum pairing for the shifts, we use dynamic

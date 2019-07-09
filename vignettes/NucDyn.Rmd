@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \Biocpkg{NucDyn} is a package designed to compare nucleosome positioning 
 between two different cell conditions using the mapped reads from MNase-seq 
-experiments. It identifies two different types of nucleosome rearrengements, 
+experiments. It identifies two different types of nucleosome rearrangements, 
 working at the fragment level:
 
 * Occupancy differences: nucleosome inclusions and evictions
@@ -45,7 +45,7 @@ For more details about the functions arguments and options refer to the
 
 ## Sample Data
 
-The examples analysed in this vignette were obtained from a study where MNaseSeq experiments for *S. cerevisiae* in G2 and M cell cycle phases were performed 
+The examples analysed in this vignette were obtained from a study where MNase-seq experiments for *S. cerevisiae* in G2 and M cell cycle phases were performed 
 [@deniz_nucleosome_2016]. Sequencing reads retrieved from
 ENA repository under accession
 PRJEB6970 were mapped to the budding yeast genome (sacCer3 version) using Bowtie
@@ -132,7 +132,7 @@ data(readsM_chrII)
 
 ```
 Data are in GRanges format from the \Biocpkg{GenomicRanges} package. BAM files containing
-aligened reads can by imported in R using `scanBam` function from \Biocpkg{Rsamtools} package
+aligned reads can by imported in R using `scanBam` function from \Biocpkg{Rsamtools} package
 and then transformed to GRanges format.
 
 ```{r head}

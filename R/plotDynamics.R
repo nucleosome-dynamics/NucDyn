@@ -1,10 +1,6 @@
 #' Plot a NucDyn object.
 #'
 #' Plot a visual representation of a NucDyn object.
-#'
-#' Plotting offers a visual representation of the dynamics between two
-#' reference states.
-#'
 #' Coverage profile for ref1 will be shown as a solid grey background and
 #' coverage profile for ref2 will be shown as a dotted profile.  Superimposed,
 #' arrows showing read shifts (upstream in blue and downstream in red). Indels
@@ -13,9 +9,9 @@
 #'
 #' @param dyn `NucDyn` object with the dynamic to plot.
 #' @param plot.range Range from the `NucDyn` object to plot. If not specified,
-#'     the whole set will be plotted. If the dynamics contains more than one
+#'     the whole set will be plotted. If `dyn` contains more than one
 #'     chromosome, they will appear concatenated in the plot.
-#' @param chr Chromosome from the `NucDyn` object to plot. If not specified,
+#' @param chr Chromosome of the `NucDyn` object to plot. If not specified,
 #'     all chromosomes will appear plotted concatenated.
 #' @param dyn.name Name to be given to the dyanamics that will be displayed in
 #'     the plot.
@@ -33,6 +29,7 @@
 #' @author Oscar Flores, Ricard Illa
 #'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @rdname plotDynamics
+#' @export plotDynamics
 #' @keywords hplot
 #
 setGeneric(

@@ -15,26 +15,28 @@ reference sets.
 }
 \details{
 Intances of this class contain two \code{GRangesList} objects, each with
-information about how reads where classified in each input dataset.  The
-names of the \code{GRangesList} objects the following (with some exceptions*):
+information about how reads were classified in each input dataset.  The
+fields of each \code{GRangesList} object are (with some exceptions*):
 \itemize{
-\item originals: All reads present for that set before the analysis.
+\item originals: All reads used for the analysis, after removing long reads
+defined by maxLen parameter.
 \item coinciding: Reads that have an exact match in the other set and are
 considered to be the same read.
 \item same.start: Reads whose match in the other set starts at the same position
-but ends in a different one. The are considered to be a consequence of
+but ends in a different one. They are considered to be a consequence of
 experimental differences.
 \item same.end: Reads whose match in the other set ends at the same position but
 starts in a different one. They are considered to be a consequence of
 experimental differences.
-\item containedA: Reads in the set B which are totally contained by the length
-of their match in the set A. Or reads in the set A that totally contain
-the length of their match in the set B. They are considered to be a
+\item containedA: Reads in the set B which are totally contained by
+their match in the set A. Or reads in the set A that totally contain
+their match in the set B. They are considered to be a
 consequence of experimental differences.
-\item containedB: Reads in the set A which are totally contained by the length
-of their match in the set B. Or reads in the set B that totally contain
-the length of their match in the set A. They are considered to be a
+\item containedB: Reads in the set A which are totally contained by
+their match in the set B. Or reads in the set B that totally contain
+their match in the set A. They are considered to be a
 consequence of experimental differences.
+\item small.shifts: Upstream or downstream shifts shorter than minDiff.
 \item left.shifts: Shifts that suffer an upstream shift when considering
 transition from the set A to the set B.
 \item right.shifts: Shifts that suffer a downstream shift when considering

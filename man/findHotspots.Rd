@@ -42,15 +42,51 @@ chromosome.}
 \value{
 A \code{data.frame} with the following columns:
 \itemize{
-\item chrom: Chromosome name.
-\item coord: Genomic coordinates (average dyad position of affected
-nucleosomes).
+\item start: initial position of the detected hotspot
+\item end: final position of the detected hotspot
+\item peak: point of largest change (shortest p-value)
+\item nreads: Number of reads involved at peak position
+\item score: average p-value in the hotspot weighted by the coverage of reads
+involved in the hotspot
 \item type: The type of the hotspot (as listed above).
-\item nreads: Number of reads involved in the hotspot.
+\item chr: Chromosome name.
 }
 }
 \description{
-Find hotspots from a given nucleosome dynamics.
+Find hotspots (groups of single-read changes) from a \code{NucDyn} object.
+This function helps in the analysis of the nucleosome dynamics by
+finding the regions with relevant changes in the individual position
+of the nucleosomes.
+There are 4 types of basic hotspots:
+}
+\details{
+\itemize{
+\item SHIFT +: Translational movement of nucleosomes, downstream (+).
+\item SHIFT -: Translational movement of nucleosomes, upstream (-).
+\item EVICTION: Nucleosome reads removed from that locus.
+\item INCLUSION: Nucleosome reads added to that locus.
+}
+
+As translational and coverage changes can happen anywhere, only those
+involving a certain number of reads are reported. This number can by
+adjusted by the \code{threshold} parameter. If \code{threshold} is a \code{character}
+vector representing a percentage value (i.e., 60\%), this will be
+automatically converted to the absolute value given by the corresponding
+percentile of the coverage in the window. If, instead, \code{threshold} is a
+\code{numeric} value, this value will be used as absolute threhold.
+It two adjacent hotspots with shifts in opposite directions are detected but
+one of them is relatively small in comparison with the other, but will be
+reported as shifts, disregarding the value of \code{combined}. We consider two
+hotspots of the same magnitude if the ratio between the number of reads in
+one and the other is smaller than \code{same.magnitude}. This ratio is always
+performed by using the larger number as numerator and the smaller as
+denominator; therefore, \code{same.magnitude} must always be greater of equal
+than 1.
+For example, with \code{same.magnitude=2}, we consider that 25 reads shifting
+downstream followed bby 17 reads shifting upstream will be of the same
+magnitude (25/17 == 1.47 < 2) and we will annotate it as a "DISPERSION". In
+another example, if we have 25 shifts downstream followed by only 5 shifts
+upstream (25/5 == 5 > 2), both hotspot will be annotated as "SHIFT".
 }
 \examples{
     \donttest{data(readsG2_chrII)}

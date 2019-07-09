@@ -1,7 +1,8 @@
 #' Sample chromosome II nucleosome calls
 #'
-#' Nucleosome positions in S. cerevisiae (sacCer3) chrII, derived from 
-#' MNase-seq data, for cell cycle phases G2 and M
+#' List of 2 ´GRangs´ objects, containign nucleosome positions in 
+#' S. cerevisiae (sacCer3) chrII, derived from MNase-seq data, 
+#' for cell cycle phases G2 and M.
 #'
 #' @docType data
 #'

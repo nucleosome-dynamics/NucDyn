@@ -7,8 +7,8 @@ Author: Ricard Illa, Diana Buitrago
 Maintainer: Diana Buitrago <diana.buitrago@irbbarcelona.org>
 Description: Nucleosome occupancy dynamic comparison between two reference states.
 License: file LICENSE
-Depends: R (>= 3.6), methods
-Imports: GenomeInfoDb, GenomicRanges, S4Vectors, BiocGenerics, IRanges, nucleR, parallel, plyr, doParallel, Rcpp, graphics, stats
+Depends: R (>= 3.6), methods, GenomicRanges
+Imports: GenomeInfoDb, S4Vectors, BiocGenerics, IRanges, nucleR, parallel, plyr, doParallel, Rcpp, graphics, stats
 Suggests: BiocStyle, knitr, rmarkdown
 LazyLoad: yes
 LinkingTo: Rcpp

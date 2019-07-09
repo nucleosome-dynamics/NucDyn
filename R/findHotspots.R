@@ -1,45 +1,25 @@
 #' Find hotspots in a NucDyn object.
 #'
-#' Find hotspots from a given nucleosome dynamics.
-#'
-#' This function is aimed to help in the analysis of the nucleosome dynamics by
-#' pointing out these regions with relevant changes in the individual position
-#' of the nucleosomes.
-#'
+#' Find hotspots (groups of single-read changes) from a `NucDyn` object. 
+#' This function helps in the analysis of the nucleosome dynamics by
+#' finding the regions with relevant changes in the individual position
+#' of the nucleosomes. 
 #' There are 4 types of basic hotspots:
 #'
-#' * Translational movement of nucleosomes, downstream (+).
-#' * Translational movement of nucleosomes, upstream (-).
-#' * Nucleosome reads removed from that locus.
-#' * Nucleosome reads added to that locus.
+#' * SHIFT +: Translational movement of nucleosomes, downstream (+).
+#' * SHIFT -: Translational movement of nucleosomes, upstream (-).
+#' * EVICTION: Nucleosome reads removed from that locus.
+#' * INCLUSION: Nucleosome reads added to that locus.
 #'
 #' As translational and coverage changes can happen anywhere, only those
-#' involving a certain number of reads are reported. This number can by
-#' adjusted by the `threshold` parameter. If `threshold` is a `character`
-#' vector representing a percentage value (ie, `"60\\%"`), this will be
-#' automatically converted to the absolute value given by the corresponding
-#' percentile of the coverage in the window. If, instead, `threshold` is a
-#' `numeric` value, this value will be used as absolute threhold.
+#' involving a large number of reads (larger than shift.nreads and indel.nreads,
+#' respectively) and having significant scores (lower than shift.threshold or 
+#' indel.threshold) are reported. 
 #'
-#' It two adjacent hotspots with shifts in opposite directions are detected but
-#' one of them is relatively small in comparison with the other, but will be
-#' reported as shifts, disregarding the value of `combined`. We consider two
-#' hotspots of the same magnitude if the ratio between the number of reads in
-#' one and the other is smaller than `same.magnitude`. This ratio is always
-#' performed by using the larger number as numerator and the smaller as
-#' denominator; therefore, `same.magnitude` must always be greater of equal
-#' than 1.
-#' 
-#' For example, with `same.magnitude=2`, we consider that 25 reads shifting
-#' downstream followed bby 17 reads shifting upstream will be of the same
-#' magnitude (25/17 == 1.47 < 2) and we will annotate it as a "DISPERSION". In
-#' another example, if we have 25 shifts downstream followed by only 5 shifts
-#' upstream (25/5 == 5 > 2), both hotspot will be annotated as "SHIFT".
-#'
-#' @param dyn NucDyn object with the dynamic to analyze.
-#' @param nuc list of two `GRanges` objects containing the nucleosome calls of 
+#' @param dyn NucDyn object with the nucleosome changes to analyze.
+#' @param nuc List of two `GRanges` objects containing the nucleosome calls of 
 #'   experiment 1 and experiment 2. 
-#' @param wins Size of the window in base-pairs where the relative scores are
+#' @param wins Size of the window, in base-pairs, where the relative scores are
 #'   computed
 #' @param indel.threshold Maximum p-value for an `INCLUSION` or `EVICTION` 
 #'   hotspot to be considered significant.
@@ -55,11 +35,14 @@
 #'
 #' @return A `data.frame` with the following columns:
 #'
-#' * chrom: Chromosome name.
-#' * coord: Genomic coordinates (average dyad position of affected
-#'   nucleosomes).
+#' * start: Initial position of the detected hotspot
+#' * end: Final position of the detected hotspot
+#' * peak: Point of largest change (shortest p-value)
+#' * nreads: Number of reads involved at peak position 
+#' * score: Average p-value in the hotspot weighted by the coverage of reads 
+#'          involved in the hotspot 
 #' * type: The type of the hotspot (as listed above).
-#' * nreads: Number of reads involved in the hotspot.
+#' * chr: Chromosome name.
 #'
 #' @examples
 #'     \donttest{data(readsG2_chrII)}
@@ -417,6 +400,7 @@ findPVals <- function (x, y, wins=10000)
 #' @author Ricard Illa, 
 #'     Diana Buitrago \email{diana.buitrago@@irbbarcelona.org}
 #' @keywords manip
+#' @export applyThreshold
 #'
 applyThreshold <- function(hs, indel.thresh, shift.thresh, 
                            indel.nreads, shift.nreads)
